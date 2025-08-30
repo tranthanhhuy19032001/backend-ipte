@@ -1,3 +1,6 @@
+// =========================
+// Generators & Datasource
+// =========================
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,93 +10,429 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Permission {
-  version                Int                @default(1)
-  created_at             DateTime           @default(now())
-  created_by             String?            @db.VarChar(50)
-  permission_description String?
-  permission_id          Int                @id @default(autoincrement())
-  permission_name        String             @unique @db.VarChar(50)
-  updated_at             DateTime
-  updated_by             String?            @db.VarChar(50)
-  RolesPermissions       RolesPermissions[]
-
-  @@map("permissions")
+// =========================
+// Enums (PostgreSQL ENUMs)
+// =========================
+enum course_level {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
 }
 
-model Post {
-  title      String   @db.VarChar(255)
-  content    String
-  version    Int      @default(1)
-  author_id  Int?
-  created_at DateTime @default(now())
-  created_by String?  @db.VarChar(50)
-  post_id    Int      @id @default(autoincrement())
-  updated_at DateTime
-  updated_by String?  @db.VarChar(50)
-  User       User?    @relation(fields: [author_id], references: [user_id])
+enum course_mode {
+  ONLINE
+  OFFLINE
+  HYBRID
+}
 
-  @@map("posts")
+enum publish_status {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum enrollment_status {
+  INTERESTED
+  REGISTERED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum payment_status {
+  UNPAID
+  PAID
+  PARTIAL
+  REFUNDED
+}
+
+enum contact_method {
+  PHONE
+  EMAIL
+  ZALO
+  MESSENGER
+  WHATSAPP
+  OTHER
+}
+
+enum consult_status {
+  PENDING
+  CONTACTED
+  SCHEDULED
+  CLOSED
+  CONVERTED
+}
+
+// =========================
+// Core RBAC
+// =========================
+model Permission {
+  permission_id          Int      @id @default(autoincrement())
+  permission_name        String   @unique @db.VarChar(50)
+  permission_description String?
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+  created_by             String?  @db.VarChar(50)
+  updated_by             String?  @db.VarChar(50)
+  version                Int      @default(1)
+
+  RolePermission RolePermission[]
+
+  @@map("permission")
 }
 
 model Role {
-  version          Int                @default(1)
-  created_at       DateTime           @default(now())
-  created_by       String?            @db.VarChar(50)
+  role_id          Int      @id @default(autoincrement())
+  role_name        String   @unique @db.VarChar(50)
   role_description String?
-  role_id          Int                @id @default(autoincrement())
-  role_name        String             @unique @db.VarChar(50)
-  updated_at       DateTime
-  updated_by       String?            @db.VarChar(50)
-  RolesPermissions RolesPermissions[]
-  UsersRoles       UsersRoles[]
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  created_by       String?  @db.VarChar(50)
+  updated_by       String?  @db.VarChar(50)
+  version          Int      @default(1)
 
-  @@map("roles")
-}
+  RolePermission RolePermission[]
+  UsersRoles     UsersRoles[]
 
-model RolesPermissions {
-  role_id       Int
-  permission_id Int
-  created_at    DateTime   @default(now())
-  updated_at    DateTime
-  created_by    String?    @db.VarChar(50)
-  updated_by    String?    @db.VarChar(50)
-  version       Int        @default(1)
-  Permission    Permission @relation(fields: [permission_id], references: [permission_id], onDelete: Cascade)
-  Role          Role       @relation(fields: [role_id], references: [role_id], onDelete: Cascade)
-
-  @@id([role_id, permission_id])
-  @@map("roles_permissions")
+  @@map("role")
 }
 
 model User {
-  username   String       @unique @db.VarChar(50)
-  password   String       @db.VarChar(255)
-  email      String       @unique @db.VarChar(100)
-  version    Int          @default(1)
-  created_at DateTime     @default(now())
-  created_by String?      @db.VarChar(50)
-  full_name  String?      @db.VarChar(100)
-  updated_at DateTime
-  updated_by String?      @db.VarChar(50)
-  user_id    Int          @id @default(autoincrement())
-  Post       Post[]
-  UsersRoles UsersRoles[]
+  user_id    Int      @id @default(autoincrement())
+  username   String   @unique @db.VarChar(50)
+  password   String   @db.VarChar(255)
+  email      String   @unique @db.VarChar(100)
+  full_name  String?  @db.VarChar(100)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?  @db.VarChar(50)
+  updated_by String?  @db.VarChar(50)
+  version    Int      @default(1)
 
-  @@map("users")
+  UsersRoles       UsersRoles[]
+  Students         student[]              @relation("user_student")
+  News             news[]                 @relation("user_news")
+  Knowledge        knowledge[]            @relation("user_knowledge")
+  ConsultsAssigned consultation_request[] @relation("cr_assignee")
+  comment          comment[]
+
+  @@map("user")
 }
 
 model UsersRoles {
   user_id    Int
   role_id    Int
   created_at DateTime @default(now())
-  updated_at DateTime
+  updated_at DateTime @updatedAt
   created_by String?  @db.VarChar(50)
   updated_by String?  @db.VarChar(50)
   version    Int      @default(1)
-  Role       Role     @relation(fields: [role_id], references: [role_id], onDelete: Cascade)
-  User       User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  User User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  Role Role @relation(fields: [role_id], references: [role_id], onDelete: Cascade)
 
   @@id([user_id, role_id])
-  @@map("users_roles")
+  @@map("user_role")
+}
+
+model RolePermission {
+  role_id       Int
+  permission_id Int
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  created_by    String?  @db.VarChar(50)
+  updated_by    String?  @db.VarChar(50)
+  version       Int      @default(1)
+
+  Role       Role       @relation(fields: [role_id], references: [role_id], onDelete: Cascade)
+  Permission Permission @relation(fields: [permission_id], references: [permission_id], onDelete: Cascade)
+
+  @@id([role_id, permission_id])
+  @@map("role_permission")
+}
+
+// =========================
+// Domain Models
+// =========================
+model course {
+  course_id         Int          @id @default(autoincrement())
+  course_code       String?      @unique @db.VarChar(50)
+  course_name       String       @db.VarChar(255)
+  slug              String?      @unique @db.VarChar(255)
+  short_description String?
+  description       String?
+  level             course_level @default(BEGINNER)
+  mode              course_mode  @default(ONLINE)
+  language          String?      @db.VarChar(50)
+  price             Decimal      @default(0) @db.Decimal(12, 2)
+  duration_hours    Int?
+  start_date        DateTime?    @db.Date
+  end_date          DateTime?    @db.Date
+  image_url         String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?  @db.VarChar(50)
+  updated_by String?  @db.VarChar(50)
+  version    Int      @default(1)
+
+  Enrollments     enrollment[]
+  Reviews         review[]
+  ConsultRequests consultation_request[]
+  Commitments     commitment[]
+  Comments        comment[]
+
+  @@index([slug], map: "idx_course_slug")
+  @@index([level], map: "idx_course_level")
+  @@index([mode], map: "idx_course_mode")
+  @@map("course")
+}
+
+model student {
+  student_id Int       @id @default(autoincrement())
+  user_id    Int       @unique
+  phone      String?   @db.VarChar(30)
+  dob        DateTime? @db.Date
+  address    String?
+  note       String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?  @db.VarChar(50)
+  updated_by String?  @db.VarChar(50)
+  version    Int      @default(1)
+
+  User        User         @relation("user_student", fields: [user_id], references: [user_id], onDelete: Cascade)
+  Enrollments enrollment[]
+  Reviews     review[]
+
+  @@map("student")
+}
+
+model enrollment {
+  enrollment_id  Int               @id @default(autoincrement())
+  student_id     Int
+  course_id      Int
+  status         enrollment_status @default(REGISTERED)
+  payment_status payment_status    @default(UNPAID)
+  payment_amount Decimal           @default(0) @db.Decimal(12, 2)
+  registered_at  DateTime          @default(now())
+  started_at     DateTime?
+  completed_at   DateTime?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?  @db.VarChar(50)
+  updated_by String?  @db.VarChar(50)
+  version    Int      @default(1)
+
+  Student student @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
+  Course  course  @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+
+  @@unique([student_id, course_id], map: "uq_enrollment")
+  @@index([student_id], map: "idx_enrollment_student")
+  @@index([course_id], map: "idx_enrollment_course")
+  @@map("enrollment")
+}
+
+model review {
+  review_id   Int     @id @default(autoincrement())
+  course_id   Int
+  student_id  Int
+  rating      Int // CHECK 1..5 not expressible in Prisma; enforce in app/DB
+  title       String? @db.VarChar(255)
+  content     String?
+  is_approved Boolean @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?  @db.VarChar(50)
+  updated_by String?  @db.VarChar(50)
+  version    Int      @default(1)
+
+  Course  course  @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  Student student @relation(fields: [student_id], references: [student_id], onDelete: Cascade)
+
+  @@unique([student_id, course_id], map: "uq_review")
+  @@index([course_id], map: "idx_review_course")
+  @@index([student_id], map: "idx_review_student")
+  @@map("review")
+}
+
+model consultation_request {
+  consultation_request_id Int             @id @default(autoincrement())
+  full_name               String          @db.VarChar(255)
+  email                   String          @db.VarChar(255)
+  phone                   String?         @db.VarChar(30)
+  course_id               Int?
+  message                 String?
+  contact_method          contact_method?
+  status                  consult_status  @default(PENDING)
+  preferred_time          DateTime?
+  source                  String?         @db.VarChar(50)
+  assigned_to             Int?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?  @db.VarChar(50)
+  updated_by String?  @db.VarChar(50)
+  version    Int      @default(1)
+
+  Course   course? @relation(fields: [course_id], references: [course_id], onDelete: SetNull)
+  Assignee User?   @relation("cr_assignee", fields: [assigned_to], references: [user_id], onDelete: SetNull)
+
+  @@index([status], map: "idx_consult_status")
+  @@index([course_id], map: "idx_consult_course")
+  @@map("consultation_request")
+}
+
+model news {
+  news_id         Int            @id @default(autoincrement())
+  title           String         @db.VarChar(255)
+  slug            String         @unique @db.VarChar(255)
+  summary         String?
+  content         String
+  cover_image_url String?
+  status          publish_status @default(DRAFT)
+  published_at    DateTime?
+  author_id       Int?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?  @db.VarChar(50)
+  updated_by String?  @db.VarChar(50)
+  version    Int      @default(1)
+
+  Author   User?     @relation("user_news", fields: [author_id], references: [user_id], onDelete: SetNull)
+  Comments comment[]
+
+  @@index([status], map: "idx_news_status")
+  @@index([published_at], map: "idx_news_published_at")
+  @@map("news")
+}
+
+model knowledge {
+  knowledge_id    Int            @id @default(autoincrement())
+  title           String         @db.VarChar(255)
+  slug            String         @unique @db.VarChar(255)
+  content         String
+  cover_image_url String?
+  status          publish_status @default(DRAFT)
+  published_at    DateTime?
+  author_id       Int?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?  @db.VarChar(50)
+  updated_by String?  @db.VarChar(50)
+  version    Int      @default(1)
+
+  Author   User?     @relation("user_knowledge", fields: [author_id], references: [user_id], onDelete: SetNull)
+  Comments comment[]
+
+  @@index([status], map: "idx_knowledge_status")
+  @@index([published_at], map: "idx_knowledge_published_at")
+  @@map("knowledge")
+}
+
+model comment {
+  comment_id        Int     @id @default(autoincrement())
+  user_id           Int?
+  course_id         Int?
+  news_id           Int?
+  knowledge_id      Int?
+  parent_comment_id Int?
+  content           String
+  is_approved       Boolean @default(true)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?  @db.VarChar(50)
+  updated_by String?  @db.VarChar(50)
+  version    Int      @default(1)
+
+  User      User?      @relation(fields: [user_id], references: [user_id], onDelete: SetNull)
+  Course    course?    @relation(fields: [course_id], references: [course_id], onDelete: Cascade)
+  News      news?      @relation(fields: [news_id], references: [news_id], onDelete: Cascade)
+  Knowledge knowledge? @relation(fields: [knowledge_id], references: [knowledge_id], onDelete: Cascade)
+
+  Parent  comment?  @relation("comment_parent", fields: [parent_comment_id], references: [comment_id], onDelete: Cascade)
+  Replies comment[] @relation("comment_parent")
+
+  // CHECK (num_nonnulls(course_id, news_id, knowledge_id) = 1) không thể mô tả trong Prisma; cần giữ constraint tại DB
+  @@index([course_id], map: "idx_comment_course")
+  @@index([news_id], map: "idx_comment_news")
+  @@index([knowledge_id], map: "idx_comment_knowledge")
+  @@index([parent_comment_id], map: "idx_comment_parent")
+  @@map("comment")
+}
+
+model about_me {
+  about_id     Int     @id @default(autoincrement())
+  org_name     String? @db.VarChar(255)
+  description  String?
+  mission      String?
+  vision       String?
+  email        String? @db.VarChar(255)
+  phone        String? @db.VarChar(50)
+  hotline      String? @db.VarChar(50)
+  website      String? @db.VarChar(255)
+  address      String?
+  facebook_url String? @db.VarChar(255)
+  zalo_url     String? @db.VarChar(255)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?  @db.VarChar(50)
+  updated_by String?  @db.VarChar(50)
+  version    Int      @default(1)
+
+  Branches branch[]
+
+  @@map("about_me")
+}
+
+model branch {
+  branch_id     Int      @id @default(autoincrement())
+  about_id      Int
+  branch_name   String   @db.VarChar(255)
+  address       String
+  phone         String?  @db.VarChar(50)
+  latitude      Decimal? @db.Decimal(10, 6)
+  longitude     Decimal? @db.Decimal(10, 6)
+  opening_hours Json?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?  @db.VarChar(50)
+  updated_by String?  @db.VarChar(50)
+  version    Int      @default(1)
+
+  About about_me @relation(fields: [about_id], references: [about_id], onDelete: Cascade)
+
+  @@index([about_id], map: "idx_branch_about")
+  @@map("branch")
+}
+
+model commitment {
+  commitment_id  Int       @id @default(autoincrement())
+  title          String    @db.VarChar(255)
+  content        String?
+  is_active      Boolean   @default(true)
+  priority       Int       @default(0)
+  course_id      Int?
+  effective_from DateTime? @db.Date
+  effective_to   DateTime? @db.Date
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?  @db.VarChar(50)
+  updated_by String?  @db.VarChar(50)
+  version    Int      @default(1)
+
+  Course course? @relation(fields: [course_id], references: [course_id], onDelete: SetNull)
+
+  @@index([course_id], map: "idx_commitment_course")
+  @@index([is_active], map: "idx_commitment_active")
+  @@map("commitment")
 }

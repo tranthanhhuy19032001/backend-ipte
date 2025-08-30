@@ -1,6 +1,17 @@
 {
     "compilerOptions": {
         // other options
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "baseUrl": "src",
+        "paths": {
+            "@utils/*": ["utils/*"],
+            "@services/*": ["modules/services/*"],
+            "@controllers/*": ["modules/controllers/*"],
+            "@dao/*": ["modules/dao/*"],
+            "@routes/*": ["routes/*"],
+            "@models/*": ["modules/models/*"],
+            "@middlewares/*": ["middlewares/*"],
+            "@config/*": ["config/*"]
+        }
     }
 }

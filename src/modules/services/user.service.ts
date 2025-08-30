@@ -1,4 +1,4 @@
-import { UserDAO } from "./user.dao";
+import { UserDAO } from "@dao/user.dao";
 import { User } from "@prisma/client";
 
 export class UserService {
