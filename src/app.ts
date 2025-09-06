@@ -12,11 +12,12 @@ const app: Application = express();
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(errorHandler);
 
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
+
+app.use(errorHandler);
 
 // Default route
 app.get("/", (req, res) => {

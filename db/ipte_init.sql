@@ -375,22 +375,38 @@ CREATE INDEX IF NOT EXISTS idx_commitment_course ON commitment(course_id);
 CREATE INDEX IF NOT EXISTS idx_commitment_active ON commitment(is_active);
 
 
-CREATE TABLE refresh_token (
-  id SERIAL PRIMARY KEY,
-  user_id INT NOT NULL REFERENCES "user"(user_id) ON DELETE CASCADE,
-  jti VARCHAR(100) NOT NULL,
-  token_hash VARCHAR(255) NOT NULL,
-  user_agent TEXT,
-  ip VARCHAR(100),
-  expires_at TIMESTAMP NOT NULL,
-  revoked_at TIMESTAMP,
-  created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  created_by     VARCHAR(50),
-  updated_by     VARCHAR(50),
-  version        INT DEFAULT 1
+-- public.refresh_token definition (mở rộng)
+
+CREATE TABLE public.refresh_token (
+    id              serial4       NOT NULL,
+    user_id         int4          NOT NULL,
+    jti             varchar(100)  NOT NULL,               -- ID duy nhất cho refresh token
+    token_hash      varchar(255)  NOT NULL,               -- hash của refresh token
+    session_id      uuid          NOT NULL,               -- 👈 định danh phiên (ổn định cho 1 thiết bị)
+    device_name     varchar(100)  NULL,                   -- tên thiết bị client tự gửi (ví dụ: iPhone 15)
+    user_agent      text          NULL,                   -- User-Agent string
+    ip              varchar(45)   NULL,                   -- IP (ipv4/ipv6); 45 đủ chứa cả IPv6
+    expires_at      timestamp     NOT NULL,
+    last_used_at    timestamp     DEFAULT CURRENT_TIMESTAMP, -- lần cuối dùng token (refresh)
+    revoked_at      timestamp     NULL,
+    replaced_by_jti varchar(100)  NULL,                   -- 👈 jti mới thay thế khi rotate
+    created_at      timestamp     DEFAULT CURRENT_TIMESTAMP,
+    updated_at      timestamp     DEFAULT CURRENT_TIMESTAMP,
+    created_by      varchar(50)   NULL,
+    updated_by      varchar(50)   NULL,
+    version         int4          DEFAULT 1,
+
+    CONSTRAINT refresh_token_pkey PRIMARY KEY (id),
+    CONSTRAINT refresh_token_user_id_fkey FOREIGN KEY (user_id) REFERENCES public."user"(user_id) ON DELETE CASCADE
 );
-CREATE UNIQUE INDEX uq_refresh_jti ON refresh_token(jti);
+
+-- Unique constraint cho jti (đảm bảo 1 jti chỉ xuất hiện 1 lần)
+CREATE UNIQUE INDEX uq_refresh_jti ON public.refresh_token (jti);
+
+-- Các index hữu ích cho hiệu năng truy vấn
+CREATE INDEX idx_refresh_user_session ON public.refresh_token (user_id, session_id);
+CREATE INDEX idx_refresh_expires      ON public.refresh_token (expires_at);
+CREATE INDEX idx_refresh_revoked      ON public.refresh_token (revoked_at);
 
 
 -- ==========================================
