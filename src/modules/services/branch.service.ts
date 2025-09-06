@@ -58,10 +58,14 @@ export class BranchService {
                     phone: data.phone ?? null,
                     latitude: data.latitude ?? null,
                     longitude: data.longitude ?? null,
-                    opening_hours:
-                        data.opening_hours !== undefined
-                            ? (data.opening_hours as Prisma.InputJsonValue)
-                            : null,
+                    ...(data.opening_hours !== undefined
+                        ? {
+                              opening_hours:
+                                  data.opening_hours === null
+                                      ? Prisma.DbNull // DB NULL
+                                      : (data.opening_hours as Prisma.InputJsonValue),
+                          }
+                        : {}),
                     created_by: data.created_by ?? null,
                     version: data.version ?? null,
                     about_me: {
@@ -125,22 +129,38 @@ export class BranchService {
             // Remove about_id from update data as it's not updatable
             const { about_id, ...updateData } = data;
 
-            // Ensure opening_hours is compatible with Prisma's InputJsonValue
-            let opening_hours: Prisma.InputJsonValue | null = null;
+            // Ensure opening_hours is compatible with Prisma's InputJsonValue or NullableJsonNullValueInput
+            let opening_hours:
+                | Prisma.InputJsonValue
+                | Prisma.NullableJsonNullValueInput
+                | undefined;
             if (updateData.opening_hours !== undefined) {
-                opening_hours =
-                    updateData.opening_hours === null
-                        ? null
-                        : (updateData.opening_hours as Prisma.InputJsonValue);
+                if (updateData.opening_hours === null) {
+                    opening_hours = Prisma.DbNull;
+                } else if (
+                    typeof updateData.opening_hours === "object" &&
+                    updateData.opening_hours !== null &&
+                    !Array.isArray(updateData.opening_hours)
+                ) {
+                    // Convert plain object to JSON-compatible value
+                    opening_hours = JSON.parse(
+                        JSON.stringify(updateData.opening_hours)
+                    );
+                } else {
+                    opening_hours =
+                        updateData.opening_hours as Prisma.InputJsonValue;
+                }
             }
 
             const updated = await prisma.branch.update({
                 where: { branch_id: branchId },
                 data: {
                     ...updateData,
-                    opening_hours,
-                    updated_by: data.created_by,
-                },
+                    ...(updateData.opening_hours !== undefined
+                        ? { opening_hours }
+                        : {}),
+                    updated_by: data.created_by ?? null,
+                } as Prisma.branchUpdateInput,
             });
             return updated;
         } catch (e: any) {
