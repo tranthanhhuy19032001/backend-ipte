@@ -1,5 +1,5 @@
 import { UserDAO } from "@dao/user.dao";
-import { User } from "@prisma/client";
+import { user } from "@prisma/client";
 
 export class UserService {
     private userDao: UserDAO;
@@ -8,15 +8,15 @@ export class UserService {
         this.userDao = new UserDAO();
     }
 
-    async getUserById(id: number): Promise<User | null> {
+    async getUserById(id: number): Promise<user | null> {
         return this.userDao.findById(id);
     }
 
-    async getUserByEmail(email: string): Promise<User | null> {
+    async getUserByEmail(email: string): Promise<user | null> {
         return this.userDao.findByEmail(email);
     }
 
-    async getAllUsers(): Promise<User[]> {
+    async getAllUsers(): Promise<user[]> {
         return this.userDao.findAll();
     }
 
@@ -25,7 +25,7 @@ export class UserService {
         password: string,
         email: string,
         roleId: number
-    ): Promise<User> {
+    ): Promise<user> {
         // 👉 Có thể hash password tại đây trước khi lưu
         return this.userDao.create({
             email,
@@ -38,11 +38,11 @@ export class UserService {
         } as any); // ép kiểu vì thiếu id, createdAt, updatedAt
     }
 
-    async updateUser(id: number, data: Partial<User>): Promise<User> {
+    async updateUser(id: number, data: Partial<user>): Promise<user> {
         return this.userDao.update(id, data);
     }
 
-    async deleteUser(id: number): Promise<User> {
+    async deleteUser(id: number): Promise<user> {
         return this.userDao.delete(id);
     }
 }

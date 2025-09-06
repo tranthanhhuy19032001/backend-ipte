@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model about_me {
+model AboutMe {
   about_id     Int       @id @default(autoincrement())
   org_name     String?   @db.VarChar(255)
   description  String?
@@ -25,10 +25,12 @@ model about_me {
   created_by   String?   @db.VarChar(50)
   updated_by   String?   @db.VarChar(50)
   version      Int?      @default(1)
-  branch       branch[]
+  branch       Branch[]
+
+  @@map("about_me")
 }
 
-model branch {
+model Branch {
   branch_id     Int       @id @default(autoincrement())
   about_id      Int
   branch_name   String    @db.VarChar(255)
@@ -42,13 +44,14 @@ model branch {
   created_by    String?   @db.VarChar(50)
   updated_by    String?   @db.VarChar(50)
   version       Int?      @default(1)
-  about_me      about_me  @relation(fields: [about_id], references: [about_id], onDelete: Cascade, onUpdate: NoAction)
+  AboutMe       AboutMe   @relation(fields: [about_id], references: [about_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([about_id], map: "idx_branch_about")
+  @@map("branch")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model comment {
+model Comment {
   comment_id        Int        @id @default(autoincrement())
   user_id           Int?
   course_id         Int?
@@ -62,20 +65,21 @@ model comment {
   created_by        String?    @db.VarChar(50)
   updated_by        String?    @db.VarChar(50)
   version           Int?       @default(1)
-  course            course?    @relation(fields: [course_id], references: [course_id], onDelete: Cascade, onUpdate: NoAction)
-  knowledge         knowledge? @relation(fields: [knowledge_id], references: [knowledge_id], onDelete: Cascade, onUpdate: NoAction)
-  news              news?      @relation(fields: [news_id], references: [news_id], onDelete: Cascade, onUpdate: NoAction)
-  comment           comment?   @relation("commentTocomment", fields: [parent_comment_id], references: [comment_id], onDelete: Cascade, onUpdate: NoAction)
-  other_comment     comment[]  @relation("commentTocomment")
-  user              user?      @relation(fields: [user_id], references: [user_id], onUpdate: NoAction)
+  Course            Course?    @relation(fields: [course_id], references: [course_id], onDelete: Cascade, onUpdate: NoAction)
+  Knowledge         Knowledge? @relation(fields: [knowledge_id], references: [knowledge_id], onDelete: Cascade, onUpdate: NoAction)
+  news              News?      @relation(fields: [news_id], references: [news_id], onDelete: Cascade, onUpdate: NoAction)
+  comment           Comment?   @relation("commentTocomment", fields: [parent_comment_id], references: [comment_id], onDelete: Cascade, onUpdate: NoAction)
+  Comment           Comment[]  @relation("commentTocomment")
+  User              User?      @relation(fields: [user_id], references: [user_id], onUpdate: NoAction)
 
   @@index([course_id], map: "idx_comment_course")
   @@index([knowledge_id], map: "idx_comment_knowledge")
   @@index([news_id], map: "idx_comment_news")
   @@index([parent_comment_id], map: "idx_comment_parent")
+  @@map("comment")
 }
 
-model commitment {
+model Commitment {
   commitment_id  Int       @id @default(autoincrement())
   title          String    @db.VarChar(255)
   content        String?
@@ -89,13 +93,14 @@ model commitment {
   created_by     String?   @db.VarChar(50)
   updated_by     String?   @db.VarChar(50)
   version        Int?      @default(1)
-  course         course?   @relation(fields: [course_id], references: [course_id], onUpdate: NoAction)
+  course         Course?   @relation(fields: [course_id], references: [course_id], onUpdate: NoAction)
 
   @@index([is_active], map: "idx_commitment_active")
   @@index([course_id], map: "idx_commitment_course")
+  @@map("commitment")
 }
 
-model consultation_request {
+model ConsultationRequest {
   consultation_request_id Int             @id @default(autoincrement())
   full_name               String          @db.VarChar(255)
   email                   String          @db.VarChar(255)
@@ -112,45 +117,47 @@ model consultation_request {
   created_by              String?         @db.VarChar(50)
   updated_by              String?         @db.VarChar(50)
   version                 Int?            @default(1)
-  user                    user?           @relation(fields: [assigned_to], references: [user_id], onUpdate: NoAction)
-  course                  course?         @relation(fields: [course_id], references: [course_id], onUpdate: NoAction)
+  user                    User?           @relation(fields: [assigned_to], references: [user_id], onUpdate: NoAction)
+  course                  Course?         @relation(fields: [course_id], references: [course_id], onUpdate: NoAction)
 
   @@index([course_id], map: "idx_consult_course")
   @@index([status], map: "idx_consult_status")
+  @@map("consultation_request")
 }
 
-model course {
-  course_id            Int                    @id @default(autoincrement())
-  course_code          String?                @unique @db.VarChar(50)
-  course_name          String                 @db.VarChar(255)
-  slug                 String?                @unique @db.VarChar(255)
+model Course {
+  course_id            Int                   @id @default(autoincrement())
+  course_code          String?               @unique @db.VarChar(50)
+  course_name          String                @db.VarChar(255)
+  slug                 String?               @unique @db.VarChar(255)
   short_description    String?
   description          String?
-  level                course_level           @default(BEGINNER)
-  mode                 course_mode            @default(ONLINE)
-  language             String?                @default("en") @db.VarChar(50)
-  price                Decimal?               @default(0) @db.Decimal(12, 2)
+  level                course_level          @default(BEGINNER)
+  mode                 course_mode           @default(ONLINE)
+  language             String?               @default("en") @db.VarChar(50)
+  price                Decimal?              @default(0) @db.Decimal(12, 2)
   duration_hours       Int?
-  start_date           DateTime?              @db.Date
-  end_date             DateTime?              @db.Date
+  start_date           DateTime?             @db.Date
+  end_date             DateTime?             @db.Date
   image_url            String?
-  created_at           DateTime?              @default(now()) @db.Timestamp(6)
-  updated_at           DateTime?              @default(now()) @db.Timestamp(6)
-  created_by           String?                @db.VarChar(50)
-  updated_by           String?                @db.VarChar(50)
-  version              Int?                   @default(1)
-  comment              comment[]
-  commitment           commitment[]
-  consultation_request consultation_request[]
-  enrollment           enrollment[]
-  review               review[]
+  created_at           DateTime?             @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?             @default(now()) @db.Timestamp(6)
+  created_by           String?               @db.VarChar(50)
+  updated_by           String?               @db.VarChar(50)
+  version              Int?                  @default(1)
+  comment              Comment[]
+  commitment           Commitment[]
+  consultation_request ConsultationRequest[]
+  enrollment           Enrollment[]
+  review               Review[]
 
   @@index([level], map: "idx_course_level")
   @@index([mode], map: "idx_course_mode")
   @@index([slug], map: "idx_course_slug")
+  @@map("course")
 }
 
-model enrollment {
+model Enrollment {
   enrollment_id  Int               @id @default(autoincrement())
   student_id     Int
   course_id      Int
@@ -165,15 +172,16 @@ model enrollment {
   created_by     String?           @db.VarChar(50)
   updated_by     String?           @db.VarChar(50)
   version        Int?              @default(1)
-  course         course            @relation(fields: [course_id], references: [course_id], onDelete: Cascade, onUpdate: NoAction)
-  student        student           @relation(fields: [student_id], references: [student_id], onDelete: Cascade, onUpdate: NoAction)
+  course         Course            @relation(fields: [course_id], references: [course_id], onDelete: Cascade, onUpdate: NoAction)
+  student        Student           @relation(fields: [student_id], references: [student_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([student_id, course_id], map: "uq_enrollment")
   @@index([course_id], map: "idx_enrollment_course")
   @@index([student_id], map: "idx_enrollment_student")
+  @@map("enrollment")
 }
 
-model knowledge {
+model Knowledge {
   knowledge_id    Int            @id @default(autoincrement())
   title           String         @db.VarChar(255)
   slug            String         @unique @db.VarChar(255)
@@ -187,14 +195,15 @@ model knowledge {
   created_by      String?        @db.VarChar(50)
   updated_by      String?        @db.VarChar(50)
   version         Int?           @default(1)
-  comment         comment[]
-  user            user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
+  comment         Comment[]
+  user            User?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
 
   @@index([published_at], map: "idx_knowledge_published_at")
   @@index([status], map: "idx_knowledge_status")
+  @@map("knowledge")
 }
 
-model news {
+model News {
   news_id         Int            @id @default(autoincrement())
   title           String         @db.VarChar(255)
   slug            String         @unique @db.VarChar(255)
@@ -209,26 +218,29 @@ model news {
   created_by      String?        @db.VarChar(50)
   updated_by      String?        @db.VarChar(50)
   version         Int?           @default(1)
-  comment         comment[]
-  user            user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
+  comment         Comment[]
+  user            User?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
 
   @@index([published_at], map: "idx_news_published_at")
   @@index([status], map: "idx_news_status")
+  @@map("news")
 }
 
-model permission {
-  permission_id          Int               @id @default(autoincrement())
-  permission_name        String            @unique @db.VarChar(50)
+model Permission {
+  permission_id          Int              @id @default(autoincrement())
+  permission_name        String           @unique @db.VarChar(50)
   permission_description String?
-  created_at             DateTime?         @default(now()) @db.Timestamp(6)
-  updated_at             DateTime?         @default(now()) @db.Timestamp(6)
-  created_by             String?           @db.VarChar(50)
-  updated_by             String?           @db.VarChar(50)
-  version                Int?              @default(1)
-  role_permission        role_permission[]
+  created_at             DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at             DateTime?        @default(now()) @db.Timestamp(6)
+  created_by             String?          @db.VarChar(50)
+  updated_by             String?          @db.VarChar(50)
+  version                Int?             @default(1)
+  role_permission        RolePermission[]
+
+  @@map("permission")
 }
 
-model refresh_token {
+model RefreshToken {
   id              Int       @id @default(autoincrement())
   user_id         Int
   jti             String    @db.VarChar(100)
@@ -246,10 +258,12 @@ model refresh_token {
   created_by      String?   @db.VarChar(50)
   updated_by      String?   @db.VarChar(50)
   version         Int?      @default(1)
+
+  @@map("refresh_token")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model review {
+model Review {
   review_id   Int       @id @default(autoincrement())
   course_id   Int
   student_id  Int
@@ -262,28 +276,31 @@ model review {
   created_by  String?   @db.VarChar(50)
   updated_by  String?   @db.VarChar(50)
   version     Int?      @default(1)
-  course      course    @relation(fields: [course_id], references: [course_id], onDelete: Cascade, onUpdate: NoAction)
-  student     student   @relation(fields: [student_id], references: [student_id], onDelete: Cascade, onUpdate: NoAction)
+  course      Course    @relation(fields: [course_id], references: [course_id], onDelete: Cascade, onUpdate: NoAction)
+  student     Student   @relation(fields: [student_id], references: [student_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([student_id, course_id], map: "uq_review")
   @@index([course_id], map: "idx_review_course")
   @@index([student_id], map: "idx_review_student")
+  @@map("review")
 }
 
-model role {
-  role_id          Int               @id @default(autoincrement())
-  role_name        String            @unique @db.VarChar(50)
+model Role {
+  role_id          Int              @id @default(autoincrement())
+  role_name        String           @unique @db.VarChar(50)
   role_description String?
-  created_at       DateTime?         @default(now()) @db.Timestamp(6)
-  updated_at       DateTime?         @default(now()) @db.Timestamp(6)
-  created_by       String?           @db.VarChar(50)
-  updated_by       String?           @db.VarChar(50)
-  version          Int?              @default(1)
-  role_permission  role_permission[]
-  user_role        user_role[]
+  created_at       DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at       DateTime?        @default(now()) @db.Timestamp(6)
+  created_by       String?          @db.VarChar(50)
+  updated_by       String?          @db.VarChar(50)
+  version          Int?             @default(1)
+  rolePermission   RolePermission[]
+  userRole         UserRole[]
+
+  @@map("role")
 }
 
-model role_permission {
+model RolePermission {
   role_id       Int
   permission_id Int
   created_at    DateTime?  @default(now()) @db.Timestamp(6)
@@ -291,13 +308,14 @@ model role_permission {
   created_by    String?    @db.VarChar(50)
   updated_by    String?    @db.VarChar(50)
   version       Int?       @default(1)
-  permission    permission @relation(fields: [permission_id], references: [permission_id], onDelete: Cascade, onUpdate: NoAction)
-  role          role       @relation(fields: [role_id], references: [role_id], onDelete: Cascade, onUpdate: NoAction)
+  permission    Permission @relation(fields: [permission_id], references: [permission_id], onDelete: Cascade, onUpdate: NoAction)
+  role          Role       @relation(fields: [role_id], references: [role_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([role_id, permission_id])
+  @@map("role_permission")
 }
 
-model student {
+model Student {
   student_id Int          @id @default(autoincrement())
   user_id    Int          @unique
   phone      String?      @db.VarChar(30)
@@ -309,31 +327,35 @@ model student {
   created_by String?      @db.VarChar(50)
   updated_by String?      @db.VarChar(50)
   version    Int?         @default(1)
-  enrollment enrollment[]
-  review     review[]
-  user       user         @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  enrollment Enrollment[]
+  review     Review[]
+  user       User         @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("student")
 }
 
-model user {
-  user_id              Int                    @id @default(autoincrement())
-  username             String                 @unique @db.VarChar(50)
-  password             String                 @db.VarChar(255)
-  email                String                 @unique @db.VarChar(100)
-  full_name            String?                @db.VarChar(100)
-  created_at           DateTime?              @default(now()) @db.Timestamp(6)
-  updated_at           DateTime?              @default(now()) @db.Timestamp(6)
-  created_by           String?                @db.VarChar(50)
-  updated_by           String?                @db.VarChar(50)
-  version              Int?                   @default(1)
-  comment              comment[]
-  consultation_request consultation_request[]
-  knowledge            knowledge[]
-  news                 news[]
-  student              student?
-  user_role            user_role[]
+model User {
+  user_id             Int                   @id @default(autoincrement())
+  username            String                @unique @db.VarChar(50)
+  password            String                @db.VarChar(255)
+  email               String                @unique @db.VarChar(100)
+  full_name           String?               @db.VarChar(100)
+  created_at          DateTime?             @default(now()) @db.Timestamp(6)
+  updated_at          DateTime?             @default(now()) @db.Timestamp(6)
+  created_by          String?               @db.VarChar(50)
+  updated_by          String?               @db.VarChar(50)
+  version             Int?                  @default(1)
+  comment             Comment[]
+  consultationRequest ConsultationRequest[]
+  knowledge           Knowledge[]
+  news                News[]
+  student             Student?
+  userRole            UserRole[]
+
+  @@map("user")
 }
 
-model user_role {
+model UserRole {
   user_id    Int
   role_id    Int
   created_at DateTime? @default(now()) @db.Timestamp(6)
@@ -341,10 +363,11 @@ model user_role {
   created_by String?   @db.VarChar(50)
   updated_by String?   @db.VarChar(50)
   version    Int?      @default(1)
-  role       role      @relation(fields: [role_id], references: [role_id], onDelete: Cascade, onUpdate: NoAction)
-  user       user      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  role       Role      @relation(fields: [role_id], references: [role_id], onDelete: Cascade, onUpdate: NoAction)
+  user       User      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([user_id, role_id])
+  @@map("user_role")
 }
 
 enum consult_status {

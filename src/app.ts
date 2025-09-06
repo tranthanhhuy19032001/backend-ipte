@@ -7,6 +7,8 @@ import errorHandler from "@middlewares/errorHandler";
 import userRoutes from "@routes/user.routes";
 import authRoutes from "@routes/auth.routes";
 
+import courseRoutes from "@routes/course.routes";
+
 const app: Application = express();
 
 // Middleware
@@ -16,6 +18,7 @@ app.use(bodyParser.json());
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/courses", courseRoutes);
 
 app.use(errorHandler);
 

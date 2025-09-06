@@ -59,7 +59,7 @@ export class AuthService {
                 OR: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
             },
             include: {
-                userRole: { include: { role: true } },
+                user_role: { include: { role: true } },
             },
         });
 
@@ -70,7 +70,8 @@ export class AuthService {
         if (!ok) throw new Error("Invalid credentials");
 
         // 3) Chuẩn bị claims
-        const roles = (user.userRole ?? []).map((ur) => ur.role.role_name);
+        const roles = (user.user_role ?? []).map((ur) => ur.role.role_name);
+        const roleIds = (user.user_role ?? []).map((ur) => ur.role_id);
         const sessionId = randomUUID(); // mỗi login = 1 phiên mới (thiết bị mới)
         const jti = randomUUID();
 
@@ -81,6 +82,7 @@ export class AuthService {
                 username: user.username,
                 email: user.email,
                 roles,
+                roleIds,
                 jti,
                 sid: sessionId, // đưa sid vào access để đồng bộ
             });
@@ -96,7 +98,7 @@ export class AuthService {
         // 5) Lưu refresh token (hash) vào DB
         const { userAgent, ip, deviceName } = getClientInfo(req);
 
-        await prisma.refreshToken.create({
+        await prisma.refresh_token.create({
             data: {
                 user_id: user.user_id,
                 jti,
@@ -154,7 +156,9 @@ export class AuthService {
         if (!userId || !jti || !sid) throw new Error("Invalid refresh token");
 
         // 2) Kiểm tra DB
-        const stored = await prisma.refreshToken.findUnique({ where: { jti } });
+        const stored = await prisma.refresh_token.findFirst({
+            where: { jti },
+        });
         if (!stored || stored.revoked_at)
             throw new Error("Invalid refresh token");
         if (stored.expires_at < new Date())
@@ -164,7 +168,7 @@ export class AuthService {
         const sameHash = stored.token_hash === hashToken(refreshToken);
         if (!sameHash) {
             // Token bị tái sử dụng/tráo đổi → revoke cả phiên
-            await prisma.refreshToken.updateMany({
+            await prisma.refresh_token.updateMany({
                 where: { session_id: stored.session_id, revoked_at: null },
                 data: { revoked_at: new Date() },
             });
@@ -175,11 +179,11 @@ export class AuthService {
         const user = await prisma.user.findUnique({
             where: { user_id: userId },
             include: {
-                userRole: { include: { role: true } },
+                user_role: { include: { role: true } },
             },
         });
         if (!user) throw new Error("Invalid refresh token");
-        const roles = (user.userRole ?? []).map((ur) => ur.role.role_name);
+        const roles = (user.user_role ?? []).map((ur) => ur.role.role_name);
 
         // 4) Rotate: tạo jti mới, ký access + refresh mới (giữ nguyên sid)
         const newJti = randomUUID();
@@ -204,11 +208,11 @@ export class AuthService {
         // 5) Transaction: revoke cũ, create mới
         const { userAgent, ip } = getClientInfo(req);
         await prisma.$transaction([
-            prisma.refreshToken.update({
+            prisma.refresh_token.updateMany({
                 where: { jti },
                 data: { revoked_at: new Date(), last_used_at: new Date() },
             }),
-            prisma.refreshToken.create({
+            prisma.refresh_token.create({
                 data: {
                     user_id: user.user_id,
                     jti: newJti,
@@ -254,12 +258,12 @@ export class AuthService {
             const { jti } = payload as { jti: string };
             if (!jti) return;
 
-            const rec = await prisma.refreshToken.findUnique({
+            const rec = await prisma.refresh_token.findFirst({
                 where: { jti },
             });
             if (!rec || rec.revoked_at) return;
 
-            await prisma.refreshToken.updateMany({
+            await prisma.refresh_token.updateMany({
                 where: { session_id: rec.session_id, revoked_at: null },
                 data: { revoked_at: new Date() },
             });
@@ -273,7 +277,7 @@ export class AuthService {
      * Revoke tất cả refresh token đang hoạt động của 1 user (logout all devices)
      */
     static async revokeRefreshTokensForUser(userId: number): Promise<void> {
-        await prisma.refreshToken.updateMany({
+        await prisma.refresh_token.updateMany({
             where: {
                 user_id: userId,
                 revoked_at: null,

@@ -2,17 +2,22 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import crypto from "crypto";
 
 /**
- * Dữ liệu chuẩn đưa vào JWT
+ * Data for signing JWT
  */
 export type SignInput = {
-    sub: string | number; // user_id
+    sub: string | number;
     username: string;
     email: string;
-    jti?: string; // ID duy nhất của token
-    sid?: string; // session_id (để phân biệt thiết bị/phiên)
-    roles?: string[]; // vai trò (nếu cần nhúng vào access)
+    jti?: string;
+    sid?: string; // session_id
+    roles?: string[];
+    roleIds?: number[];
+    permissions?: string[];
 };
 
+/**
+ * ecoded JWT payload
+ */
 export type DecodedToken = JwtPayload & {
     sub: string | number;
     username: string;
@@ -20,11 +25,13 @@ export type DecodedToken = JwtPayload & {
     jti: string;
     sid?: string;
     roles?: string[];
+    roleIds?: number[];
+    permissions?: string[];
     typ: "access" | "refresh";
 };
 
 /**
- * Ký Access Token
+ * Sign Access Token
  */
 export function signAccessToken(payload: SignInput) {
     const secret = process.env.JWT_ACCESS_SECRET!;
@@ -36,6 +43,8 @@ export function signAccessToken(payload: SignInput) {
             username: payload.username,
             email: payload.email,
             roles: payload.roles ?? [],
+            roleIds: payload.roleIds ?? [],
+            permissions: payload.permissions ?? [],
             jti: payload.jti,
             sid: payload.sid,
             typ: "access",
@@ -48,7 +57,7 @@ export function signAccessToken(payload: SignInput) {
 }
 
 /**
- * Ký Refresh Token
+ * Sign Refresh Token
  */
 export function signRefreshToken(payload: SignInput) {
     const secret = process.env.JWT_REFRESH_SECRET!;
@@ -72,8 +81,8 @@ export function signRefreshToken(payload: SignInput) {
 
 /**
  * Verify + parse JWT
- * - Kiểm tra chữ ký
- * - Kiểm tra typ (access/refresh)
+ * - Check signature
+ * - Check typ (access/refresh)
  */
 export function verifyToken(
     token: string,
@@ -103,7 +112,7 @@ export function verifyToken(
 }
 
 /**
- * Hash token (chỉ lưu hash trong DB để tăng bảo mật)
+ * Hash token (using save hashed refresh token in DB)
  */
 export function hashToken(token: string) {
     return crypto.createHash("sha256").update(token).digest("hex");

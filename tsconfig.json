@@ -11,7 +11,8 @@
             "@routes/*": ["routes/*"],
             "@models/*": ["modules/models/*"],
             "@middlewares/*": ["middlewares/*"],
-            "@config/*": ["config/*"]
+            "@config/*": ["config/*"],
+            "@enums/*": ["enums/*"]
         }
     }
 }
