@@ -21,6 +21,10 @@ services:
             sync: false
           - key: JWT_REFRESH_SECRET
             sync: false
+          - key: JWT_ACCESS_EXPIRES
+            value: "9000"
+          - key: JWT_REFRESH_EXPIRES
+            value: "2592000"
 
 databases:
     - name: postgres-ipte
