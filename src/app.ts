@@ -6,6 +6,8 @@ import errorHandler from "@middlewares/errorHandler";
 
 import userRoutes from "@routes/user.routes";
 import authRoutes from "@routes/auth.routes";
+import aboutRoutes from "@routes/about.routes";
+import branchRoutes from "@routes/branch.routes";
 
 import courseRoutes from "@routes/course.routes";
 
@@ -19,6 +21,8 @@ app.use(bodyParser.json());
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
+app.use("/api/about", aboutRoutes);
+app.use("/api/branch", branchRoutes);
 
 app.use(errorHandler);
 
