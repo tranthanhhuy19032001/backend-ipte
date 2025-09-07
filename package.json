@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "ts-node-dev -r tsconfig-paths/register --respawn src/server.ts",
         "build": "tsc",
-        "start": "node dist/server.js",
+        "start": "node -r tsconfig-paths/register dist/server.js",
         "prisma:generate": "prisma generate",
         "prisma:migrate": "prisma migrate dev --name init",
         "typecheck": "tsc --noEmit",
