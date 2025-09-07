@@ -1,6 +1,8 @@
-import express, { Application } from "express";
+import express, { Express } from "express";
 import * as bodyParser from "body-parser";
 import cors from "cors";
+
+import { registerDocs } from "@utils/minimal-docs";
 
 import errorHandler from "@middlewares/errorHandler";
 
@@ -11,7 +13,7 @@ import branchRoutes from "@routes/branch.routes";
 
 import courseRoutes from "@routes/course.routes";
 
-const app: Application = express();
+const app: Express = express();
 
 // Middleware
 app.use(cors());
@@ -30,5 +32,7 @@ app.use(errorHandler);
 app.get("/", (req, res) => {
     res.send("Welcome to IPTE Backend API 🚀");
 });
+
+registerDocs(app);
 
 export default app;

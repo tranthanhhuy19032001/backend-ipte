@@ -396,17 +396,11 @@ CREATE TABLE public.refresh_token (
     updated_by      varchar(50)   NULL,
     version         int4          DEFAULT 1,
 
-    CONSTRAINT refresh_token_pkey PRIMARY KEY (id),
-    CONSTRAINT refresh_token_user_id_fkey FOREIGN KEY (user_id) REFERENCES public."user"(user_id) ON DELETE CASCADE
+    CONSTRAINT refresh_token_pkey PRIMARY KEY (id)
 );
 
 -- Unique constraint cho jti (đảm bảo 1 jti chỉ xuất hiện 1 lần)
 CREATE UNIQUE INDEX uq_refresh_jti ON public.refresh_token (jti);
-
--- Các index hữu ích cho hiệu năng truy vấn
-CREATE INDEX idx_refresh_user_session ON public.refresh_token (user_id, session_id);
-CREATE INDEX idx_refresh_expires      ON public.refresh_token (expires_at);
-CREATE INDEX idx_refresh_revoked      ON public.refresh_token (revoked_at);
 
 
 -- ==========================================
