@@ -2,7 +2,7 @@ import express, { Express } from "express";
 import * as bodyParser from "body-parser";
 import cors from "cors";
 
-import { registerDocs } from "@utils/minimal-docs";
+import { setupSwagger } from "@config/swagger";
 
 import errorHandler from "@middlewares/errorHandler";
 
@@ -24,7 +24,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/about", aboutRoutes);
-app.use("/api/branch", branchRoutes);
+app.use("/api/branches", branchRoutes);
 
 app.use(errorHandler);
 
@@ -33,6 +33,6 @@ app.get("/", (req, res) => {
     res.send("Welcome to IPTE Backend API 🚀");
 });
 
-registerDocs(app);
+setupSwagger(app);
 
 export default app;
