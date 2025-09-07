@@ -2,7 +2,7 @@ import express, { Application } from "express";
 import * as bodyParser from "body-parser";
 import cors from "cors";
 
-import errorHandler from "@middlewares/errorHandler";
+import errorHandler from "./middlewares/errorHandler";
 
 import userRoutes from "@routes/user.routes";
 import authRoutes from "@routes/auth.routes";
