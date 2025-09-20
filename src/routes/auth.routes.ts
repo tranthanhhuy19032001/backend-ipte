@@ -19,25 +19,35 @@ const authController = new AuthController();
  *     tags: [Auth]
  *     summary: Login
  *     description: Đăng nhập và nhận access/refresh token.
+ *       Có thể đăng nhập bằng `usernameOrEmail`, hoặc `username`, hoặc `email`.
+ *       Tham số `deviceName` là tuỳ chọn để hiển thị tên thiết bị.
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [username, password]
+ *             required: [password]
  *             properties:
+ *               usernameOrEmail:
+ *                 type: string
+ *                 description: Username hoặc email
  *               username:
  *                 type: string
- *                 format: username
+ *               email:
+ *                 type: string
  *               password:
  *                 type: string
  *                 minLength: 6
+ *               deviceName:
+ *                 type: string
+ *                 description: Tên thiết bị (optional)
  *           examples:
  *             sample:
  *               value:
- *                 username: "admin"
+ *                 usernameOrEmail: "admin"
  *                 password: "admin123"
+ *                 deviceName: "Chrome on MacOS"
  *     responses:
  *       200:
  *         description: Successful login
@@ -46,9 +56,9 @@ const authController = new AuthController();
  *             schema:
  *               $ref: '#/components/schemas/AuthResponse'
  *       400:
- *         description: Bad Request
+ *         description: Thiếu tham số
  *       401:
- *         description: Unauthorized
+ *         description: Invalid credentials
  */
 
 /**
@@ -56,20 +66,18 @@ const authController = new AuthController();
  * /api/auth/logout:
  *   post:
  *     tags: [Auth]
- *     summary: Logout
- *     description: Vô hiệu hoá refresh token phía server. Client nên xoá access token phía client.
+ *     summary: Logout (current session)
+ *     description: Đăng nhập và nhận access/refresh token. Có thể đăng nhập bằng `usernameOrEmail`, hoặc `username`, hoặc `email`. Tham số `deviceName` là tuỳ chọn để hiển thị tên thiết bị.
  *     parameters:
  *       - in: cookie
  *         name: rt
- *         required: true
+ *         required: false
  *         schema:
  *           type: string
  *         description: Refresh token lưu trong cookie
  *     responses:
- *       200:
- *         description: Successful logout (ngay cả khi refresh_token đã vô hiệu hoặc không hợp lệ)
- *       400:
- *         description: Bad Request
+ *       204:
+ *         description: Logged out successfully (no content)
  */
 
 /**
@@ -78,7 +86,8 @@ const authController = new AuthController();
  *   post:
  *     tags: [Auth]
  *     summary: Refresh access token & refresh token
- *     description: Cấp lại access token và refresh token khi refresh token còn hợp lệ. Refresh token được truyền qua cookie.
+ *     description: Cấp lại access token và refresh token khi refresh token hợp lệ.
+ *       Refresh token được truyền qua cookie `rt`.
  *     parameters:
  *       - in: cookie
  *         name: rt
@@ -94,9 +103,33 @@ const authController = new AuthController();
  *             schema:
  *               $ref: '#/components/schemas/AuthResponse'
  *       400:
- *         description: Bad Request
+ *         description: Thiếu refresh token
  *       401:
- *         description: Unauthorized
+ *         description: Invalid refresh token
+ */
+
+/**
+ * @openapi
+ * /api/auth/logout-all:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Logout all sessions (tùy chọn)
+ *     description: Đăng xuất toàn bộ phiên (tất cả thiết bị) của user hiện tại.
+ *       Cần userId từ middleware auth hoặc body.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *     responses:
+ *       204:
+ *         description: Logged out from all sessions successfully
+ *       400:
+ *         description: Thiếu userId
  */
 
 router.post("/login", (req, res) => authController.login(req, res));

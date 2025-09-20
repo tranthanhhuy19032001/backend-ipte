@@ -117,3 +117,34 @@ export function verifyToken(
 export function hashToken(token: string) {
     return crypto.createHash("sha256").update(token).digest("hex");
 }
+
+export function decodeToken(token: string): DecodedToken | null {
+    try {
+        const decoded = jwt.decode(token);
+        if (decoded && typeof decoded === "object") {
+            return decoded as DecodedToken;
+        }
+        return null;
+    } catch {
+        return null;
+    }
+}
+
+export function getTokenFromHeader(req: any): string | null {
+    const authHeader = req.headers["authorization"];
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+        return authHeader.split(" ")[1];
+    }
+    return null;
+}
+
+export function getUserIdFromRequest(req: any): number | null {
+    const token = getTokenFromHeader(req);
+    if (!token) return null;
+    try {
+        const decoded = verifyToken(token, "access");
+        return Number(decoded.sub);
+    } catch {
+        return null;
+    }
+}

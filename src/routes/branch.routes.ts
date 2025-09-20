@@ -14,8 +14,6 @@ const branchController = new BranchController();
  *     tags: [Branch]
  *     summary: List branches
  *     description: Lọc theo about_id, tìm kiếm theo tên/địa chỉ/số điện thoại. Có phân trang.
- *     security:
- *       - bearerAuth: []   # Nếu list là public, xóa 2 dòng security này
  *     parameters:
  *       - in: query
  *         name: about_id
@@ -36,6 +34,7 @@ const branchController = new BranchController();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/BranchListResponse'
+ *       500: { description: Failed to list branches }
  *
  *   post:
  *     tags: [Branch]
@@ -63,24 +62,22 @@ const branchController = new BranchController();
  *                   sat: "09:00-12:00"
  *     responses:
  *       201:
- *         description: Tạo thành công
+ *         description: Tạo branch thành công
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Branch'
- *       400: { description: Bad Request }
+ *       400: { description: Invalid about_id (foreign key) }
  *       401: { description: Unauthorized }
  *       403: { description: Forbidden }
- */
-
-/**
- * @openapi
+ *       500: { description: Failed to create branch }
+ *
  * /api/branches/{id}:
  *   get:
  *     tags: [Branch]
  *     summary: Get branch by id
  *     security:
- *       - bearerAuth: []   # nếu public thì bỏ
+ *       - bearerAuth: []   # Nếu public thì bỏ block security này
  *     parameters:
  *       - in: path
  *         name: id
@@ -93,7 +90,9 @@ const branchController = new BranchController();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Branch'
- *       404: { description: Not Found }
+ *       400: { description: Invalid branch_id }
+ *       404: { description: Branch not found }
+ *       500: { description: Failed to get branch }
  *
  *   put:
  *     tags: [Branch]
@@ -129,10 +128,11 @@ const branchController = new BranchController();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Branch'
- *       400: { description: Bad Request }
+ *       400: { description: Invalid branch_id hoặc invalid about_id (foreign key) }
  *       401: { description: Unauthorized }
  *       403: { description: Forbidden }
- *       404: { description: Not Found }
+ *       404: { description: Branch not found }
+ *       500: { description: Failed to update branch }
  *
  *   delete:
  *     tags: [Branch]
@@ -146,10 +146,12 @@ const branchController = new BranchController();
  *         required: true
  *         schema: { type: integer }
  *     responses:
- *       204: { description: Deleted }
+ *       204: { description: Deleted successfully }
+ *       400: { description: Invalid branch_id }
  *       401: { description: Unauthorized }
  *       403: { description: Forbidden }
- *       404: { description: Not Found }
+ *       404: { description: Branch not found }
+ *       500: { description: Failed to delete branch }
  */
 
 router.post(

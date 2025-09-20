@@ -16,7 +16,12 @@ import courseRoutes from "@routes/course.routes";
 const app: Express = express();
 
 // Middleware
-app.use(cors());
+app.use(
+    cors({
+        origin: ["http://localhost:5173", "https://your-frontend.com"],
+        credentials: true, // để cookie 'rt' gửi kèm
+    })
+);
 app.use(bodyParser.json());
 
 // Routes

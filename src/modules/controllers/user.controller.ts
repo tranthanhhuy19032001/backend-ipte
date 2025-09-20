@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
 import { UserService } from "@services/user.service";
+import { ParamsDictionary } from "express-serve-static-core";
+import { ParsedQs } from "qs";
+import { getUserIdFromRequest } from "@utils/jwt";
 
 const userService = new UserService();
 
@@ -95,6 +98,27 @@ export class UserController {
         } catch (error: any) {
             res.status(500).json({
                 message: "Failed to delete user",
+                error: error.message,
+            });
+        }
+    }
+
+    async getMe(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = getUserIdFromRequest(req);
+            if (!userId) {
+                res.status(401).json({ message: "Unauthorized" });
+                return;
+            }
+            const user = await userService.getUserById(userId);
+            if (!user) {
+                res.status(404).json({ message: "User not found" });
+                return;
+            }
+            res.status(200).json(user);
+        } catch (error: any) {
+            res.status(500).json({
+                message: "Failed to fetch user",
                 error: error.message,
             });
         }
