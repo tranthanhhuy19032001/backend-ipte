@@ -139,6 +139,7 @@ model course {
   created_by           String?                @db.VarChar(50)
   updated_by           String?                @db.VarChar(50)
   version              Int?                   @default(1)
+  category             course_category?       @default(BASIS)
   comment              comment[]
   commitment           commitment[]
   consultation_request consultation_request[]
@@ -395,4 +396,10 @@ enum publish_status {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+enum course_category {
+  BASIS
+  ADVANCE
+  IPASS
 }

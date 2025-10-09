@@ -31,6 +31,7 @@ export type CourseListQuery = {
     max_price?: number;
     start_after?: string | Date;
     end_before?: string | Date;
+    category?: string;
     sort_by?: "created_at" | "price" | "start_date" | "course_name";
     sort_order?: "asc" | "desc";
     page?: number; // 1-based
@@ -144,6 +145,7 @@ export class CourseService {
             max_price,
             start_after,
             end_before,
+            category,
             sort_by = "created_at",
             sort_order = "desc",
             page = 1,
@@ -180,6 +182,13 @@ export class CourseService {
                     ? { start_date: { gte: new Date(start_after) } }
                     : {},
                 end_before ? { end_date: { lte: new Date(end_before) } } : {},
+                category
+                    ? {
+                          category: {
+                              equals: category as $Enums.course_category,
+                          },
+                      }
+                    : {},
             ],
         };
 
