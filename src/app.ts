@@ -12,6 +12,7 @@ import aboutRoutes from "@routes/about.routes";
 import branchRoutes from "@routes/branch.routes";
 
 import courseRoutes from "@routes/course.routes";
+import teacherRoutes from "@routes/teacher.routes";
 
 const app: Express = express();
 
@@ -30,6 +31,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/about", aboutRoutes);
 app.use("/api/branches", branchRoutes);
+app.use("/api/teachers", teacherRoutes);
 
 app.use(errorHandler);
 

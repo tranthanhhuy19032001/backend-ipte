@@ -323,6 +323,7 @@ CREATE TABLE IF NOT EXISTS about_me (
   address      TEXT,
   facebook_url VARCHAR(255),
   zalo_url     VARCHAR(255),
+  category     VARCHAR(25),
 
   created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -401,6 +402,25 @@ CREATE TABLE public.refresh_token (
 
 -- Unique constraint cho jti (đảm bảo 1 jti chỉ xuất hiện 1 lần)
 CREATE UNIQUE INDEX uq_refresh_jti ON public.refresh_token (jti);
+
+CREATE TABLE IF NOT EXISTS teacher (
+    teacher_id   SERIAL PRIMARY KEY,
+    user_id      INT UNIQUE NOT NULL REFERENCES "user"(user_id) ON DELETE CASCADE,
+    bio          TEXT,
+    name         VARCHAR(100) NOT NULL,
+    image        VARCHAR(255),
+    overall_score NUMERIC(3,2) DEFAULT 0,
+    listening_score NUMERIC(3,2) DEFAULT 0,
+    speaking_score NUMERIC(3,2) DEFAULT 0,
+    reading_score NUMERIC(3,2) DEFAULT 0,
+    writing_score NUMERIC(3,2) DEFAULT 0,
+
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by   VARCHAR(50),
+    updated_by   VARCHAR(50),
+    version      INT DEFAULT 1
+);
 
 
 -- ==========================================

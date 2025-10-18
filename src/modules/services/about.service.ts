@@ -23,17 +23,26 @@ export type AboutListQuery = {
     q?: string; // search theo org_name / description / address
     page?: number; // 1-based
     page_size?: number; // default 20, max 100
+    category?: string;
 };
 
-function buildAboutWhere(q?: string): Prisma.about_meWhereInput {
-    if (!q) return {};
-    return {
-        OR: [
+function buildAboutWhere(
+    q?: string,
+    category?: string
+): Prisma.about_meWhereInput {
+    const where: Prisma.about_meWhereInput = {};
+
+    if (q) {
+        where.OR = [
             { org_name: { contains: q, mode: "insensitive" } },
             { description: { contains: q, mode: "insensitive" } },
             { address: { contains: q, mode: "insensitive" } },
-        ],
-    };
+        ];
+    }
+    if (category) {
+        where.category = category;
+    }
+    return where;
 }
 
 export class AboutService {
@@ -56,7 +65,7 @@ export class AboutService {
         const take = Math.max(1, Math.min(query.page_size ?? 20, 100));
         const skip = (page - 1) * take;
 
-        const where = buildAboutWhere(query.q);
+        const where = buildAboutWhere(query.q, query.category);
 
         const [items, total] = await Promise.all([
             prisma.about_me.findMany({
