@@ -51,7 +51,7 @@ export class TeacherService {
 
         const teacherfeaturesData = teacherfeatures.items.map((feature) => ({
             icon: null,
-            title: feature.org_name?.toString() ?? "",
+            title: feature.title?.toString() ?? "",
             description: feature.description?.toString() ?? "",
         }));
 

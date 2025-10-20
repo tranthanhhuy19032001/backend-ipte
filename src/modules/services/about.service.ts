@@ -34,7 +34,7 @@ function buildAboutWhere(
 
     if (q) {
         where.OR = [
-            { org_name: { contains: q, mode: "insensitive" } },
+            { title: { contains: q, mode: "insensitive" } },
             { description: { contains: q, mode: "insensitive" } },
             { address: { contains: q, mode: "insensitive" } },
         ];

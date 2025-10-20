@@ -27,8 +27,9 @@ export class AboutController {
 
     async list(req: Request, res: Response) {
         try {
-            const { q, page, page_size } = req.query;
+            const { q, category, page, page_size } = req.query;
             const result = await AboutService.list({
+                category: category as string | undefined,
                 q: q as string | undefined,
                 page: page ? Number(page) : undefined,
                 page_size: page_size ? Number(page_size) : undefined,
