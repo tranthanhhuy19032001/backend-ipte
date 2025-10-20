@@ -32,6 +32,8 @@ CREATE TABLE "user" (
     password VARCHAR(255) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     full_name VARCHAR(100),
+    avatar VARCHAR(50),
+    is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(50),
@@ -236,14 +238,19 @@ CREATE INDEX IF NOT EXISTS idx_consult_course  ON consultation_request(course_id
 -- =========================================================
 CREATE TABLE IF NOT EXISTS news (
   news_id     SERIAL PRIMARY KEY,
+  author_id   INT REFERENCES "user"(user_id) ON DELETE SET NULL,
+  category_id INT,
+
+  image         TEXT,
   title       VARCHAR(255) NOT NULL,
   slug        VARCHAR(255) UNIQUE NOT NULL,
-  summary     TEXT,
+  description     TEXT,
   content     TEXT NOT NULL,
-  cover_image_url TEXT,
+
   status      publish_status NOT NULL DEFAULT 'DRAFT',
   published_at TIMESTAMP,
-  author_id   INT REFERENCES "user"(user_id) ON DELETE SET NULL,
+  tag_ids    INT[],
+  keywords TEXT[] DEFAULT '{}',
 
   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -251,9 +258,6 @@ CREATE TABLE IF NOT EXISTS news (
   updated_by  VARCHAR(50),
   version     INT DEFAULT 1
 );
-
-CREATE INDEX IF NOT EXISTS idx_news_status ON news(status);
-CREATE INDEX IF NOT EXISTS idx_news_published_at ON news(published_at);
 
 -- =========================================================
 -- 7) knowledge: bài giảng/kiến thức học tiếng Anh
@@ -263,10 +267,11 @@ CREATE TABLE IF NOT EXISTS knowledge (
   title         VARCHAR(255) NOT NULL,
   slug          VARCHAR(255) UNIQUE NOT NULL,
   content       TEXT NOT NULL,
-  cover_image_url TEXT,
+  image TEXT,
   status        publish_status NOT NULL DEFAULT 'DRAFT',
   published_at  TIMESTAMP,
   author_id     INT REFERENCES "user"(user_id) ON DELETE SET NULL,
+  description   TEXT,
 
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -376,9 +381,7 @@ CREATE INDEX IF NOT EXISTS idx_commitment_course ON commitment(course_id);
 CREATE INDEX IF NOT EXISTS idx_commitment_active ON commitment(is_active);
 
 
--- public.refresh_token definition (mở rộng)
-
-CREATE TABLE public.refresh_token (
+CREATE TABLE IF NOT EXISTS refresh_token (
     id              serial4       NOT NULL,
     user_id         int4          NOT NULL,
     jti             varchar(100)  NOT NULL,               -- ID duy nhất cho refresh token
@@ -420,6 +423,42 @@ CREATE TABLE IF NOT EXISTS teacher (
     created_by   VARCHAR(50),
     updated_by   VARCHAR(50),
     version      INT DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS category (
+	category_id SERIAL PRIMARY KEY,
+	icon text NULL,
+	"name" varchar(200) NOT NULL,
+	slug varchar(200) NOT NULL,
+	description text NULL,
+	parent_id int8 NULL,
+	category_type varchar(50) NOT NULL,
+	meta_title varchar(255) NULL,
+	meta_description text NULL,
+	h1_heading varchar(255) NULL,
+	seo_content_top text NULL,
+	seo_content_bottom text NULL,
+	canonical_url text NULL,
+	noindex bool DEFAULT false NULL,
+	created_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	updated_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	created_by varchar(50) NULL,
+	updated_by varchar(50) NULL,
+	version       INT DEFAULT 1,
+	CONSTRAINT category_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.category(category_id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS tag (
+    tag_id   SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description   TEXT,
+    slug          VARCHAR(150) UNIQUE NOT NULL,
+
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by    VARCHAR(50),
+    updated_by    VARCHAR(50),
+    version       INT DEFAULT 1
 );
 
 

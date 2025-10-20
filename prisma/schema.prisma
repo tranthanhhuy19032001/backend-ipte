@@ -65,7 +65,6 @@ model comment {
   version           Int?       @default(1)
   course            course?    @relation(fields: [course_id], references: [course_id], onDelete: Cascade, onUpdate: NoAction)
   knowledge         knowledge? @relation(fields: [knowledge_id], references: [knowledge_id], onDelete: Cascade, onUpdate: NoAction)
-  news              news?      @relation(fields: [news_id], references: [news_id], onDelete: Cascade, onUpdate: NoAction)
   comment           comment?   @relation("commentTocomment", fields: [parent_comment_id], references: [comment_id], onDelete: Cascade, onUpdate: NoAction)
   other_comment     comment[]  @relation("commentTocomment")
   user              user?      @relation(fields: [user_id], references: [user_id], onUpdate: NoAction)
@@ -197,25 +196,24 @@ model knowledge {
 }
 
 model news {
-  news_id         Int            @id @default(autoincrement())
-  title           String         @db.VarChar(255)
-  slug            String         @unique @db.VarChar(255)
-  summary         String?
-  content         String
-  cover_image_url String?
-  status          publish_status @default(DRAFT)
-  published_at    DateTime?      @db.Timestamp(6)
-  author_id       Int?
-  created_at      DateTime?      @default(now()) @db.Timestamp(6)
-  updated_at      DateTime?      @default(now()) @db.Timestamp(6)
-  created_by      String?        @db.VarChar(50)
-  updated_by      String?        @db.VarChar(50)
-  version         Int?           @default(1)
-  comment         comment[]
-  user            user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
-
-  @@index([published_at], map: "idx_news_published_at")
-  @@index([status], map: "idx_news_status")
+  news_id      Int            @id @default(autoincrement())
+  author_id    Int?
+  category_id  Int?
+  img          String?
+  title        String         @db.VarChar(255)
+  slug         String         @unique @db.VarChar(255)
+  summary      String?
+  content      String
+  status       publish_status @default(DRAFT)
+  published_at DateTime?      @db.Timestamp(6)
+  tag_ids      Int[]
+  keywords     String[]       @default([])
+  created_at   DateTime?      @default(now()) @db.Timestamp(6)
+  updated_at   DateTime?      @default(now()) @db.Timestamp(6)
+  created_by   String?        @db.VarChar(50)
+  updated_by   String?        @db.VarChar(50)
+  version      Int?           @default(1)
+  user         user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
 }
 
 model permission {
@@ -391,6 +389,18 @@ model teacher {
   updated_by      String?   @db.VarChar(50)
   version         Int?      @default(1)
   user            user      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model tag {
+  tag_id      Int       @id @default(autoincrement())
+  name        String    @unique @db.VarChar(100)
+  description String?
+  slug        String    @unique @db.VarChar(150)
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @default(now()) @db.Timestamp(6)
+  created_by  String?   @db.VarChar(50)
+  updated_by  String?   @db.VarChar(50)
+  version     Int?      @default(1)
 }
 
 enum consult_status {

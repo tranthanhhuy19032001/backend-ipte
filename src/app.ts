@@ -13,6 +13,7 @@ import branchRoutes from "@routes/branch.routes";
 
 import courseRoutes from "@routes/course.routes";
 import teacherRoutes from "@routes/teacher.routes";
+import newsRoutes from "@routes/news.routes";
 
 const app: Express = express();
 
@@ -32,6 +33,7 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/about", aboutRoutes);
 app.use("/api/branches", branchRoutes);
 app.use("/api/teachers", teacherRoutes);
+app.use("/api/news", newsRoutes);
 
 app.use(errorHandler);
 
