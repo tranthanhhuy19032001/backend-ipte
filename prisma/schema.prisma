@@ -26,6 +26,7 @@ model about_me {
   updated_by   String?   @db.VarChar(50)
   version      Int?      @default(1)
   category     String?   @db.VarChar(25)
+  map_url      String?
   branch       branch[]
 }
 

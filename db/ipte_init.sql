@@ -315,26 +315,27 @@ CREATE INDEX IF NOT EXISTS idx_comment_parent    ON comment(parent_comment_id);
 -- =========================================================
 -- 9) about_me: thông tin doanh nghiệp / trung tâm
 -- =========================================================
-CREATE TABLE IF NOT EXISTS about_me (
-  about_id     SERIAL PRIMARY KEY,
-  org_name     VARCHAR(255),
-  description  TEXT,
-  mission      TEXT,
-  vision       TEXT,
-  email        VARCHAR(255),
-  phone        VARCHAR(50),
-  hotline      VARCHAR(50),
-  website      VARCHAR(255),
-  address      TEXT,
-  facebook_url VARCHAR(255),
-  zalo_url     VARCHAR(255),
-  category     VARCHAR(25),
-
-  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  created_by   VARCHAR(50),
-  updated_by   VARCHAR(50),
-  version      INT DEFAULT 1
+CREATE TABLE public.about_me (
+	about_id serial4 NOT NULL,
+	title varchar(255) NULL,
+	description text NULL,
+	mission text NULL,
+	vision text NULL,
+	email varchar(255) NULL,
+	phone varchar(50) NULL,
+	hotline varchar(50) NULL,
+	website varchar(255) NULL,
+	address text NULL,
+	facebook_url varchar(255) NULL,
+	zalo_url varchar(255) NULL,
+	created_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	updated_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	created_by varchar(50) NULL,
+	updated_by varchar(50) NULL,
+	"version" int4 DEFAULT 1 NULL,
+	category varchar(25) NULL,
+	map_url text NULL,
+	CONSTRAINT about_me_pkey PRIMARY KEY (about_id)
 );
 
 -- Tuỳ chọn (khuyến nghị): bảng chi nhánh (branch) trực thuộc about_me
