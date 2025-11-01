@@ -209,28 +209,35 @@ CREATE INDEX IF NOT EXISTS idx_review_student ON review(student_id);
 -- =========================================================
 -- 5) consultation_request: người quan tâm / cần tư vấn
 -- =========================================================
-CREATE TABLE IF NOT EXISTS consultation_request (
-  consultation_request_id SERIAL PRIMARY KEY,
-  full_name       VARCHAR(255) NOT NULL,
-  email           VARCHAR(255) NOT NULL,
-  phone           VARCHAR(30),
-  course_id       INT REFERENCES course(course_id) ON DELETE SET NULL,
-  message         TEXT,
-  contact_method  contact_method,
-  status          consult_status NOT NULL DEFAULT 'PENDING',
-  preferred_time  TIMESTAMP,
-  source          VARCHAR(50),              -- web form, hotline, facebook, ...
-  assigned_to     INT REFERENCES "user"(user_id) ON DELETE SET NULL, -- sale tư vấn
+-- public.consultation_request definition
 
-  created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  created_by      VARCHAR(50),
-  updated_by      VARCHAR(50),
-  version         INT DEFAULT 1
+-- Drop table
+
+-- DROP TABLE public.consultation_request;
+
+CREATE TABLE public.consultation_request (
+	consultation_request_id serial4 NOT NULL,
+	full_name varchar(255) NOT NULL,
+	email varchar(255) NOT NULL,
+	phone varchar(30) NULL,
+	course_id int4 NULL,
+	message text NULL,
+	"contact_method" public."contact_method" NULL,
+	status public."consult_status" DEFAULT 'PENDING'::consult_status NOT NULL,
+	preferred_time timestamp NULL,
+	"source" varchar(50) NULL,
+	assigned_to int4 NULL,
+	created_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	updated_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	created_by varchar(50) NULL,
+	updated_by varchar(50) NULL,
+	"version" int4 DEFAULT 1 NULL,
+	CONSTRAINT consultation_request_pkey PRIMARY KEY (consultation_request_id),
+	CONSTRAINT consultation_request_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES public."user"(user_id) ON DELETE SET NULL,
+	CONSTRAINT consultation_request_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.course(course_id) ON DELETE SET NULL
 );
-
-CREATE INDEX IF NOT EXISTS idx_consult_status ON consultation_request(status);
-CREATE INDEX IF NOT EXISTS idx_consult_course  ON consultation_request(course_id);
+CREATE INDEX idx_consult_course ON public.consultation_request USING btree (course_id);
+CREATE INDEX idx_consult_status ON public.consultation_request USING btree (status);
 
 
 -- =========================================================
@@ -262,26 +269,35 @@ CREATE TABLE IF NOT EXISTS news (
 -- =========================================================
 -- 7) knowledge: bài giảng/kiến thức học tiếng Anh
 -- =========================================================
-CREATE TABLE IF NOT EXISTS knowledge (
-  knowledge_id  SERIAL PRIMARY KEY,
-  title         VARCHAR(255) NOT NULL,
-  slug          VARCHAR(255) UNIQUE NOT NULL,
-  content       TEXT NOT NULL,
-  image TEXT,
-  status        publish_status NOT NULL DEFAULT 'DRAFT',
-  published_at  TIMESTAMP,
-  author_id     INT REFERENCES "user"(user_id) ON DELETE SET NULL,
-  description   TEXT,
+-- public.knowledge definition
 
-  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  created_by    VARCHAR(50),
-  updated_by    VARCHAR(50),
-  version       INT DEFAULT 1
+-- Drop table
+
+-- DROP TABLE public.knowledge;
+
+CREATE TABLE public.knowledge (
+	knowledge_id serial4 NOT NULL,
+	title varchar(255) NOT NULL,
+	slug varchar(255) NOT NULL,
+	"content" text NOT NULL,
+	image text NULL,
+	status public."publish_status" DEFAULT 'DRAFT'::publish_status NOT NULL,
+	published_at timestamp NULL,
+	author_id int4 NULL,
+	created_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	updated_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	created_by varchar(50) NULL,
+	updated_by varchar(50) NULL,
+	"version" int4 DEFAULT 1 NULL,
+	category_id int4 NULL,
+	description text NULL,
+	is_prominent int4 DEFAULT 0 NULL,
+	CONSTRAINT knowledge_pkey PRIMARY KEY (knowledge_id),
+	CONSTRAINT knowledge_slug_key UNIQUE (slug),
+	CONSTRAINT knowledge_author_id_fkey FOREIGN KEY (author_id) REFERENCES public."user"(user_id) ON DELETE SET NULL
 );
-
-CREATE INDEX IF NOT EXISTS idx_knowledge_status ON knowledge(status);
-CREATE INDEX IF NOT EXISTS idx_knowledge_published_at ON knowledge(published_at);
+CREATE INDEX idx_knowledge_published_at ON public.knowledge USING btree (published_at);
+CREATE INDEX idx_knowledge_status ON public.knowledge USING btree (status);
 
 
 -- =========================================================
@@ -315,6 +331,12 @@ CREATE INDEX IF NOT EXISTS idx_comment_parent    ON comment(parent_comment_id);
 -- =========================================================
 -- 9) about_me: thông tin doanh nghiệp / trung tâm
 -- =========================================================
+-- public.about_me definition
+
+-- Drop table
+
+-- DROP TABLE public.about_me;
+
 CREATE TABLE public.about_me (
 	about_id serial4 NOT NULL,
 	title varchar(255) NULL,
@@ -335,6 +357,8 @@ CREATE TABLE public.about_me (
 	"version" int4 DEFAULT 1 NULL,
 	category varchar(25) NULL,
 	map_url text NULL,
+	tiktok_url varchar(255) NULL,
+	youtube_url varchar(255) NULL,
 	CONSTRAINT about_me_pkey PRIMARY KEY (about_id)
 );
 
