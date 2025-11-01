@@ -27,26 +27,8 @@ model about_me {
   version      Int?      @default(1)
   category     String?   @db.VarChar(25)
   map_url      String?
-  branch       branch[]
-}
-
-model branch {
-  branch_id     Int       @id @default(autoincrement())
-  about_id      Int
-  branch_name   String    @db.VarChar(255)
-  address       String
-  phone         String?   @db.VarChar(50)
-  latitude      Decimal?  @db.Decimal(10, 6)
-  longitude     Decimal?  @db.Decimal(10, 6)
-  opening_hours Json?
-  created_at    DateTime? @default(now()) @db.Timestamp(6)
-  updated_at    DateTime? @default(now()) @db.Timestamp(6)
-  created_by    String?   @db.VarChar(50)
-  updated_by    String?   @db.VarChar(50)
-  version       Int?      @default(1)
-  about_me      about_me  @relation(fields: [about_id], references: [about_id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([about_id], map: "idx_branch_about")
+  tiktok_url   String?   @db.VarChar(255)
+  youtube_url  String?   @db.VarChar(255)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

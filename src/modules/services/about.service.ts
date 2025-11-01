@@ -24,24 +24,46 @@ export type AboutListQuery = {
     page?: number; // 1-based
     page_size?: number; // default 20, max 100
     category?: string;
+    about_id?: number;
 };
 
 function buildAboutWhere(
     q?: string,
-    category?: string
+    category?: string,
+    about_id?: number
 ): Prisma.about_meWhereInput {
-    const where: Prisma.about_meWhereInput = {};
+    const orConditions: Prisma.about_meWhereInput[] = [];
 
-    if (q) {
-        where.OR = [
-            { title: { contains: q, mode: "insensitive" } },
-            { description: { contains: q, mode: "insensitive" } },
-            { address: { contains: q, mode: "insensitive" } },
-        ];
+    if (q && q.trim() !== "") {
+        const keyword = q.trim();
+        orConditions.push(
+            { title: { contains: keyword, mode: "insensitive" } },
+            { description: { contains: keyword, mode: "insensitive" } },
+            { address: { contains: keyword, mode: "insensitive" } }
+        );
+
+        const numericId = Number(keyword);
+        if (!Number.isNaN(numericId)) {
+            orConditions.push({ about_id: numericId });
+        }
     }
-    if (category) {
-        where.category = category;
+
+    if (category && category.trim() !== "") {
+        orConditions.push({
+            category: { contains: category.trim(), mode: "insensitive" },
+        });
     }
+
+    if (about_id) {
+        orConditions.push({ about_id });
+    }
+
+    // nếu có ít nhất 1 điều kiện OR, gán where.OR
+    const where: Prisma.about_meWhereInput = {};
+    if (orConditions.length > 0) {
+        where.OR = orConditions;
+    }
+
     return where;
 }
 
@@ -54,7 +76,6 @@ export class AboutService {
     static async getById(aboutId: number) {
         const found = await prisma.about_me.findUnique({
             where: { about_id: aboutId },
-            include: { branch: true }, // kèm các chi nhánh
         });
         if (!found) throw new Error("ABOUT_NOT_FOUND");
         return found;
@@ -65,14 +86,14 @@ export class AboutService {
         const take = Math.max(1, Math.min(query.page_size ?? 20, 100));
         const skip = (page - 1) * take;
 
-        const where = buildAboutWhere(query.q, query.category);
+        const where = buildAboutWhere(query.q, query.category, query.about_id);
 
         const [items, total] = await Promise.all([
             prisma.about_me.findMany({
                 where,
                 skip,
                 take,
-                orderBy: { created_at: "desc" },
+                orderBy: { about_id: "asc" },
             }),
             prisma.about_me.count({ where }),
         ]);
