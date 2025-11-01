@@ -13,13 +13,14 @@ import aboutRoutes from "@routes/about.routes";
 import courseRoutes from "@routes/course.routes";
 import teacherRoutes from "@routes/teacher.routes";
 import newsRoutes from "@routes/news.routes";
+import consultationRoutes from "@routes/consultation.routes";
 
 const app: Express = express();
 
 // Middleware
 app.use(
     cors({
-        origin: ["http://localhost:5173", "https://your-frontend.com"],
+        origin: ["http://localhost:3000", "https://your-frontend.com"],
         credentials: true, // để cookie 'rt' gửi kèm
     })
 );
@@ -32,6 +33,7 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/about", aboutRoutes);
 app.use("/api/teachers", teacherRoutes);
 app.use("/api/news", newsRoutes);
+app.use("/api/consultation", consultationRoutes);
 
 app.use(errorHandler);
 

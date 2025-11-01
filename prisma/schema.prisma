@@ -95,6 +95,7 @@ model consultation_request {
   created_by              String?         @db.VarChar(50)
   updated_by              String?         @db.VarChar(50)
   version                 Int?            @default(1)
+  target_score            String?         @db.VarChar(255)
   user                    user?           @relation(fields: [assigned_to], references: [user_id], onUpdate: NoAction)
   course                  course?         @relation(fields: [course_id], references: [course_id], onUpdate: NoAction)
 
