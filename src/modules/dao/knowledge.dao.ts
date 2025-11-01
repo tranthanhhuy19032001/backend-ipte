@@ -1,4 +1,4 @@
-import { knowledge } from "@prisma/client";
+import { knowledge, Prisma } from "@prisma/client";
 
 import prisma from "@config/database";
 
@@ -11,6 +11,11 @@ type knowledgeJoined = {
     category: string | null;
     authorName: string | null;
     authorAvatar: string | null;
+};
+
+type ListOptions = {
+    page: number;
+    pageSize: number;
 };
 
 export class KnowledgeDAO {
@@ -30,5 +35,40 @@ export class KnowledgeDAO {
             JOIN "user" u ON u.user_id = k.author_id
             order by id desc;`;
         return rows;
+    }
+
+    async selectKnowledges(
+        categoryId: number,
+        opts: ListOptions
+    ): Promise<{
+        items: knowledge[];
+        page: number;
+        page_size: number;
+        total: number;
+        total_pages: number;
+    }> {
+        const { page, pageSize } = opts;
+        const skip = (page - 1) * pageSize;
+        const take = pageSize;
+
+        const where: Prisma.knowledgeWhereInput = { category_id: categoryId };
+
+        const [items, total] = await prisma.$transaction([
+            prisma.knowledge.findMany({
+                where,
+                skip,
+                take,
+                orderBy: [{ is_prominent: "desc" }, { created_at: "desc" }],
+            }),
+            prisma.knowledge.count({ where }),
+        ]);
+
+        return {
+            items,
+            page,
+            page_size: pageSize,
+            total,
+            total_pages: Math.ceil(total / pageSize) || 1,
+        };
     }
 }
