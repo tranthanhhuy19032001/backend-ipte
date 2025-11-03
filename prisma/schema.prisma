@@ -357,6 +357,8 @@ model category {
   created_by         String?    @db.VarChar(50)
   updated_by         String?    @db.VarChar(50)
   version            Int?       @default(1)
+  url                String?    @db.VarChar(50)
+  level              Int?
   category           category?  @relation("categoryTocategory", fields: [parent_id], references: [category_id], onUpdate: NoAction)
   other_category     category[] @relation("categoryTocategory")
 }

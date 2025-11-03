@@ -15,6 +15,7 @@ import teacherRoutes from "@routes/teacher.routes";
 import newsRoutes from "@routes/news.routes";
 import consultationRoutes from "@routes/consultation.routes";
 import knowledgeRoutes from "@routes/knowledge.routes";
+import categoryRoutes from "@routes/category.routes";
 
 const app: Express = express();
 
@@ -36,6 +37,7 @@ app.use("/api/teachers", teacherRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/consultations", consultationRoutes);
 app.use("/api/knowledges", knowledgeRoutes);
+app.use("/api/categories", categoryRoutes);
 
 app.use(errorHandler);
 
