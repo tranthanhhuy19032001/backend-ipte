@@ -6,18 +6,21 @@ export type CourseCreateDTO = {
     course_code?: string | null;
     course_name: string;
     slug?: string | null;
-    short_description?: string | null;
+    title?: string | null;
     description?: string | null;
-    level?: string; // course_level enum value as string
-    mode?: string; // course_mode enum value as string
+    level?: string;
+    mode?: string;
     language?: string | null;
     price?: number | null;
-    duration_hours?: number | null;
+    duration?: string | null;
     start_date?: string | Date | null;
     end_date?: string | Date | null;
-    image_url?: string | null;
+    image?: string | null;
     created_by?: string | null;
     version?: number | null;
+    schedule: string | null;
+    tuition: string | null;
+    content: string | null;
 };
 
 export type CourseUpdateDTO = Partial<CourseCreateDTO>;
@@ -69,19 +72,21 @@ function normalizeCreateInput(input: CourseCreateDTO) {
         course_code: input.course_code ?? null,
         course_name: input.course_name,
         slug: input.slug ?? null,
-        short_description: input.short_description ?? null,
+        title: input.title ?? null,
         description: input.description ?? null,
         level: (input.level as any) ?? $Enums.course_level.BEGINNER,
-        mode: (input.mode as any) ?? undefined, // enum trên DB
+        mode: (input.mode as any) ?? undefined,
         language: input.language ?? "en",
         price: input.price ?? 0,
-        duration_hours: input.duration_hours ?? null,
+        duration: input.duration ?? null,
         start_date: input.start_date ? new Date(input.start_date) : null,
         end_date: input.end_date ? new Date(input.end_date) : null,
-        image_url: input.image_url ?? null,
+        image: input.image ?? null,
         created_by: input.created_by ?? null,
         version: input.version ?? 1,
-        // created_at/updated_at: DB default
+        schedule: input.schedule,
+        tuition: input.tuition,
+        content: input.content,
     };
     return data;
 }
@@ -91,18 +96,21 @@ function normalizeUpdateInput(input: CourseUpdateDTO) {
         course_code: input.course_code ?? undefined,
         course_name: input.course_name ?? undefined,
         slug: input.slug ?? undefined,
-        short_description: input.short_description ?? undefined,
+        title: input.title ?? undefined,
         description: input.description ?? undefined,
         level: (input.level as any) ?? undefined,
         mode: (input.mode as any) ?? undefined,
         language: input.language ?? undefined,
         price: input.price ?? undefined,
-        duration_hours: input.duration_hours ?? undefined,
+        duration: input.duration ?? undefined,
         start_date: input.start_date ? new Date(input.start_date) : undefined,
         end_date: input.end_date ? new Date(input.end_date) : undefined,
-        image_url: input.image_url ?? undefined,
+        image: input.image ?? undefined,
         updated_by: input.created_by ?? undefined,
         version: input.version ?? undefined,
+        schedule: input.schedule ?? undefined,
+        tuition: input.tuition ?? undefined,
+        content: input.content ?? undefined,
     };
     return data;
 }
@@ -243,5 +251,11 @@ export class CourseService {
             if (e?.code === "P2025") throw new Error("COURSE_NOT_FOUND");
             throw e;
         }
+    }
+
+    static async getCourseBySlug(slug: string) {
+        const found = await prisma.course.findUnique({ where: { slug } });
+        if (!found) throw new Error("COURSE_NOT_FOUND");
+        return found;
     }
 }

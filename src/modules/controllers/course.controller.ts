@@ -114,4 +114,17 @@ export class CourseController {
                 .json({ message: "Failed to delete course." });
         }
     }
+
+    async getBySlug(req: Request, res: Response) {
+        try {
+            const slug = req.params.slug;
+            const course = await CourseService.getCourseBySlug(slug);
+            res.json(course);
+        } catch (e: any) {
+            if (e?.message === "COURSE_NOT_FOUND") {
+                return res.status(404).json({ message: "Course not found." });
+            }
+            return res.status(500).json({ message: "Failed to get course." });
+        }
+    }
 }

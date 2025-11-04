@@ -189,4 +189,6 @@ router.delete(
     courseController.remove.bind(courseController)
 );
 
+router.get("/slug/:slug", courseController.getBySlug.bind(courseController));
+
 export default router;
