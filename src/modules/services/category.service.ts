@@ -1,5 +1,21 @@
+import { Prisma, $Enums } from "@prisma/client";
+import prisma from "@config/database";
+
 import { CategoryDAO } from "@dao/category.dao";
 import { category } from "@prisma/client";
+
+// (Tuỳ chọn) Khai báo type đầu vào tương tự CourseListQuery
+type CategoryListQuery = {
+    q?: string;
+    categoryName?: string;
+    categoryType?: string; // hoặc $Enums.category_type nếu có enum
+    slug?: string;
+    url?: string;
+    sortBy?: keyof Prisma.categoryOrderByWithRelationInput | "createdAt";
+    orderBy?: "asc" | "desc";
+    page?: number;
+    pageSize?: number;
+};
 
 type MenuNode = {
     id: number;
@@ -15,8 +31,98 @@ export class CategoryService {
     constructor() {
         this.categoryDAO = new CategoryDAO();
     }
-    async getCategoriesByType(categoryType: string) {
-        return this.categoryDAO.findAllByCategoryType(categoryType);
+
+    static async getCategories(query: CategoryListQuery) {
+        const {
+            q,
+            categoryName,
+            categoryType,
+            slug,
+            url,
+            sortBy: sort_by = "created_at",
+            orderBy: sort_order = "asc",
+            page = 1,
+            pageSize = 20,
+        } = query ?? {};
+
+        // where giống listCourses (AND các điều kiện, có q -> OR nhiều field)
+        const where: Prisma.categoryWhereInput = {
+            AND: [
+                q
+                    ? {
+                          OR: [
+                              {
+                                  name: {
+                                      contains: q,
+                                      mode: "insensitive",
+                                  },
+                              },
+                              {
+                                  slug: {
+                                      contains: q,
+                                      mode: "insensitive",
+                                  },
+                              },
+                              {
+                                  url: {
+                                      contains: q,
+                                      mode: "insensitive",
+                                  },
+                              },
+                          ],
+                      }
+                    : {},
+                categoryName
+                    ? {
+                          name: {
+                              contains: categoryName,
+                              mode: "insensitive",
+                          },
+                      }
+                    : {},
+                categoryType
+                    ? {
+                          // nếu categoryType là enum:
+                          category_type: {
+                              equals: categoryType,
+                          },
+                      }
+                    : {},
+                slug ? { slug: { equals: slug } } : {},
+                url
+                    ? {
+                          url: {
+                              contains: url,
+                              mode: "insensitive",
+                          },
+                      }
+                    : {},
+            ],
+        };
+
+        // orderBy động như listCourses
+        const orderBy: Prisma.categoryOrderByWithRelationInput = {
+            [sort_by]: sort_order,
+        } as Prisma.categoryOrderByWithRelationInput;
+
+        // phân trang an toàn như listCourses
+        const safePage = Math.max(1, page);
+        const safePageSize = Math.max(1, Math.min(pageSize, 100));
+        const skip = (safePage - 1) * safePageSize;
+        const take = safePageSize;
+
+        const [items, total] = await Promise.all([
+            prisma.category.findMany({ where, orderBy, skip, take }),
+            prisma.category.count({ where }),
+        ]);
+
+        return {
+            items,
+            page: safePage,
+            page_size: take,
+            total,
+            total_pages: Math.ceil(total / take),
+        };
     }
 
     async getHeaderMenu(): Promise<MenuNode[]> {
@@ -61,14 +167,5 @@ export class CategoryService {
         }
 
         return roots;
-    }
-
-    async getCategories(options: {
-        categoryName?: string;
-        categoryType?: string;
-        page?: number;
-        pageSize?: number;
-    }): Promise<category[]> {
-        return this.categoryDAO.findCategories(options);
     }
 }
