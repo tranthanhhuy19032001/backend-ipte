@@ -27,18 +27,17 @@ export type CourseUpdateDTO = Partial<CourseCreateDTO>;
 
 export type CourseListQuery = {
     q?: string; // search
-    level?: string;
-    mode?: string;
-    language?: string;
-    min_price?: number;
-    max_price?: number;
-    start_after?: string | Date;
-    end_before?: string | Date;
+    courseName?: string;
+    title?: string;
+    description?: string;
+    schedule?: string;
+    tuition?: string;
+    slug?: string;
     category?: string;
-    sort_by?: "created_at" | "price" | "start_date" | "course_name";
-    sort_order?: "asc" | "desc";
-    page?: number; // 1-based
-    page_size?: number; // default 20
+    sortBy?: "price" | "created_at" | "updated_at";
+    orderBy?: "asc" | "desc";
+    page?: number;
+    page_size?: number;
 };
 
 /** Tạo slug duy nhất từ course_name hoặc slug truyền vào */
@@ -146,16 +145,15 @@ export class CourseService {
     static async listCourses(query: CourseListQuery) {
         const {
             q,
-            level,
-            mode,
-            language,
-            min_price,
-            max_price,
-            start_after,
-            end_before,
+            courseName,
+            title,
+            description,
+            schedule,
+            tuition,
+            slug,
             category,
-            sort_by = "created_at",
-            sort_order = "desc",
+            sortBy: sort_by = "created_at",
+            orderBy: sort_order = "asc",
             page = 1,
             page_size = 20,
         } = query;
@@ -181,15 +179,46 @@ export class CourseService {
                           ],
                       }
                     : {},
-                level ? { level: level as any } : {},
-                mode ? { mode: mode as any } : {},
-                language ? { language: { equals: language } } : {},
-                min_price != null ? { price: { gte: min_price } } : {},
-                max_price != null ? { price: { lte: max_price } } : {},
-                start_after
-                    ? { start_date: { gte: new Date(start_after) } }
+                courseName
+                    ? {
+                          course_name: {
+                              contains: courseName,
+                              mode: "insensitive",
+                          },
+                      }
                     : {},
-                end_before ? { end_date: { lte: new Date(end_before) } } : {},
+                title
+                    ? {
+                          title: {
+                              contains: title,
+                              mode: "insensitive",
+                          },
+                      }
+                    : {},
+                description
+                    ? {
+                          description: {
+                              contains: description,
+                              mode: "insensitive",
+                          },
+                      }
+                    : {},
+                schedule
+                    ? {
+                          schedule: {
+                              contains: schedule,
+                              mode: "insensitive",
+                          },
+                      }
+                    : {},
+                tuition
+                    ? {
+                          tuition: {
+                              contains: tuition,
+                              mode: "insensitive",
+                          },
+                      }
+                    : {},
                 category
                     ? {
                           category: {
@@ -197,6 +226,7 @@ export class CourseService {
                           },
                       }
                     : {},
+                slug ? { slug: { equals: slug } } : {},
             ],
         };
 

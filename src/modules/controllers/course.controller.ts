@@ -38,32 +38,34 @@ export class CourseController {
         try {
             const {
                 q,
-                level,
-                mode,
-                language,
-                min_price,
-                max_price,
-                start_after,
-                end_before,
+                courseName,
+                slug,
+                title,
+                description,
+                schedule,
+                tuition,
                 category,
-                sort_by,
-                sort_order,
+                orderBy,
+                sortBy,
                 page,
                 page_size,
             } = req.query;
 
             const result = await CourseService.listCourses({
                 q: q as string | undefined,
-                level: level as string | undefined,
-                mode: mode as string | undefined,
-                language: language as string | undefined,
-                min_price: min_price != null ? Number(min_price) : undefined,
-                max_price: max_price != null ? Number(max_price) : undefined,
-                start_after: start_after as string | undefined,
-                end_before: end_before as string | undefined,
+                courseName: courseName as string | undefined,
+                title: title as string | undefined,
+                description: description as string | undefined,
+                schedule: schedule as string | undefined,
+                tuition: tuition as string | undefined,
+                slug: slug as string | undefined,
                 category: category as string | undefined,
-                sort_by: sort_by as any,
-                sort_order: sort_order as any,
+                orderBy: orderBy as "asc" | "desc" | undefined,
+                sortBy: sortBy as
+                    | "price"
+                    | "created_at"
+                    | "updated_at"
+                    | undefined,
                 page: page != null ? Number(page) : undefined,
                 page_size: page_size != null ? Number(page_size) : undefined,
             });

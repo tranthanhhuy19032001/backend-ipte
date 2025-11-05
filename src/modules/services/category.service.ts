@@ -62,4 +62,13 @@ export class CategoryService {
 
         return roots;
     }
+
+    async getCategories(options: {
+        categoryName?: string;
+        categoryType?: string;
+        page?: number;
+        pageSize?: number;
+    }): Promise<category[]> {
+        return this.categoryDAO.findCategories(options);
+    }
 }

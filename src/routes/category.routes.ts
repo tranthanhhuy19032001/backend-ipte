@@ -8,8 +8,5 @@ router.get(
     "/type/:categoryType",
     categoryController.getCategoriesByType.bind(categoryController)
 );
-router.get(
-    "/header-menu",
-    categoryController.getHeaderMenu.bind(categoryController)
-);
+router.get("", categoryController.getCategories.bind(categoryController));
 export default router;

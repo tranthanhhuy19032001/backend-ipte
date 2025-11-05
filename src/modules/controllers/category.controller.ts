@@ -14,8 +14,15 @@ export class CategoryController {
         res.json(categories);
     }
 
-    async getHeaderMenu(req: Request, res: Response) {
-        const menu = await this.categoryService.getHeaderMenu();
-        res.json(menu);
+    async getCategories(req: Request, res: Response) {
+        const { categoryName, categoryType, page, pageSize } = req.query;
+
+        const categories = await this.categoryService.getCategories({
+            categoryName: categoryName as string | undefined,
+            categoryType: categoryType as string | undefined,
+            page: page ? Number(page) : undefined,
+            pageSize: pageSize ? Number(pageSize) : undefined,
+        });
+        res.json(categories);
     }
 }
