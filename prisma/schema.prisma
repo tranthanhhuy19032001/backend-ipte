@@ -151,6 +151,7 @@ model course {
   schedule             String?                @db.VarChar(255)
   tuition              String?                @db.VarChar(255)
   content              String?
+  category_id          Int                    @default(autoincrement())
   comment              comment[]
   commitment           commitment[]
   consultation_request consultation_request[]
@@ -227,6 +228,7 @@ model news {
   created_by   String?        @db.VarChar(50)
   updated_by   String?        @db.VarChar(50)
   version      Int?           @default(1)
+  is_prominent Int?           @default(0)
   user         user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
 }
 

@@ -17,6 +17,24 @@ type CategoryListQuery = {
     pageSize?: number;
 };
 
+type CourseSummary = {
+    id: number;
+    code: string | null;
+    name: string;
+    slug: string | null;
+    title: string | null;
+    level: string;
+    mode: string;
+    language: string | null;
+    price: Prisma.Decimal | null;
+    duration: string | null;
+    start_date: Date | null;
+    end_date: Date | null;
+    image: string | null;
+    tuition: string | null;
+    schedule: string | null;
+};
+
 type MenuNode = {
     id: number;
     name: string;
@@ -24,8 +42,8 @@ type MenuNode = {
     slug: string | null;
     icon: string | null;
     category_type: string;
-    description?: string | null;
-    courses?: string | null;
+    description?: string | null; // chỉ gắn ở root
+    courses?: CourseSummary[] | null; // mảng khóa học
     children?: MenuNode[] | null;
 };
 
@@ -177,27 +195,22 @@ export class CategoryService {
         slugOrUrl?: string,
         categoryType?: string
     ): Promise<MenuNode | null> {
-        // 1) Lấy node gốc theo slug hoặc url (ưu tiên slug)
+        // 1) Node gốc theo slug hoặc url
         const root = await prisma.category.findFirst({
             where: {
                 AND: [
                     categoryType ? { category_type: categoryType } : {},
-                    {
-                        OR: [{ slug: slugOrUrl }, { url: slugOrUrl }],
-                    },
+                    { OR: [{ slug: slugOrUrl }, { url: slugOrUrl }] },
                 ],
             },
         });
-
         if (!root) return null;
 
-        // 2) Lấy toàn bộ nodes cùng category_type, có url bắt đầu bằng url gốc
-        // (đủ dữ liệu để dựng cây n cấp)
+        // 2) Lấy toàn bộ categories trong cùng category_type và cùng prefix url
         const rows = await prisma.category.findMany({
             where: {
                 AND: [
                     { category_type: root.category_type },
-                    // Nếu thiếu url, vẫn lọc theo slug gốc như fallback
                     root.url
                         ? { url: { startsWith: root.url } }
                         : { slug: { startsWith: root.slug ?? "" } },
@@ -206,11 +219,57 @@ export class CategoryService {
             orderBy: { category_id: "asc" },
         });
 
-        // 3) Index theo id để truy cập nhanh
-        const byId = new Map<number, (typeof rows)[number]>();
-        for (const r of rows) byId.set(Number(r.category_id), r);
+        // 3) Lấy toàn bộ courses của *mọi* category xuất hiện trong cây (1 query)
+        const categoryIds = rows.map((r) => Number(r.category_id));
+        const courses = await prisma.course.findMany({
+            where: { category_id: { in: categoryIds } },
+            orderBy: [{ category_id: "asc" }, { course_id: "asc" }],
+            select: {
+                course_id: true,
+                course_code: true,
+                course_name: true,
+                slug: true,
+                title: true,
+                level: true,
+                mode: true,
+                language: true,
+                price: true,
+                duration: true,
+                start_date: true,
+                end_date: true,
+                image: true,
+                tuition: true,
+                schedule: true,
+                category_id: true,
+            },
+        });
 
-        // 4) Build tree dựa trên url prefix + level
+        // 4) Group courses theo category_id
+        const coursesByCategory = new Map<number, CourseSummary[]>();
+        for (const c of courses) {
+            const k = Number(c.category_id);
+            const list = coursesByCategory.get(k) ?? [];
+            list.push({
+                id: Number(c.course_id),
+                code: c.course_code,
+                name: c.course_name,
+                slug: c.slug,
+                title: c.title,
+                level: String(c.level),
+                mode: String(c.mode),
+                language: c.language,
+                price: c.price, // hoặc Number(c.price ?? 0)
+                duration: c.duration,
+                start_date: c.start_date,
+                end_date: c.end_date,
+                image: c.image,
+                tuition: c.tuition,
+                schedule: c.schedule,
+            });
+            coursesByCategory.set(k, list);
+        }
+
+        // 5) Build tree dựa theo url prefix + level
         const buildNode = (r: (typeof rows)[number]): MenuNode => {
             const node: MenuNode = {
                 id: Number(r.category_id),
@@ -219,21 +278,17 @@ export class CategoryService {
                 slug: r.slug,
                 icon: r.icon,
                 category_type: r.category_type,
-                // gốc có description, các node con không cần
                 description:
                     r.category_id === root.category_id
                         ? r.description
                         : undefined,
-                // placeholder: gán courses = tên node (nếu muốn). Nếu có bảng course, thay thế bằng list/JSON từ JOIN.
-                courses:
-                    r.category_id === root.category_id ? undefined : r.name,
+                courses: coursesByCategory.get(Number(r.category_id)) ?? [], // mảng (rỗng nếu không có)
                 children: null,
             };
 
-            // node con trực tiếp: level = level cha + 1 và URL bắt đầu bằng parent.url + '/'
-            // dùng startsWith để tránh “kẹt” vì parent_id tự tham chiếu
             const parentUrl = r.url ?? "";
             const expectedLevel = (r.level ?? 0) + 1;
+
             const directChildren = rows.filter((x) => {
                 if (x.category_id === r.category_id) return false;
                 const childUrl = x.url ?? "";
@@ -255,13 +310,18 @@ export class CategoryService {
 
         const result = buildNode(root);
 
-        // 5) (tuỳ chọn) sort lại children nếu muốn theo tên hoặc thứ tự custom
-        const sortTreeByIdAsc = (n: MenuNode | null) => {
-            if (!n?.children?.length) return;
-            n.children.sort((a, b) => a.id - b.id); // hoặc theo tên: localeCompare
-            n.children.forEach(sortTreeByIdAsc);
+        // 6) (tuỳ chọn) sort children & courses
+        const sortTree = (n: MenuNode | null) => {
+            if (!n) return;
+            if (n.children?.length) {
+                n.children.sort((a, b) => a.id - b.id);
+                n.children.forEach(sortTree);
+            }
+            if (n.courses?.length) {
+                n.courses.sort((a, b) => a.id - b.id);
+            }
         };
-        sortTreeByIdAsc(result);
+        sortTree(result);
 
         return result;
     }
