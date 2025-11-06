@@ -147,4 +147,10 @@ export class KnowledgeDAO {
             total_pages: Math.ceil(total / pageSize) || 1,
         };
     }
+
+    async findById(id: number): Promise<knowledge | null> {
+        return prisma.knowledge.findUnique({
+            where: { knowledge_id: id },
+        });
+    }
 }

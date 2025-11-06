@@ -52,4 +52,25 @@ export class NewsController {
             });
         }
     }
+
+    async getNewsById(req: Request, res: Response): Promise<void> {
+        const id = Number(req.params.id);
+        if (Number.isNaN(id)) {
+            res.status(400).json({ message: "Invalid news id." });
+            return;
+        }
+        try {
+            const news = await newsService.getNewsById(id);
+            res.status(200).json(news);
+        } catch (error: any) {
+            if (error?.message === "NEWS_NOT_FOUND") {
+                res.status(404).json({ message: "News not found." });
+                return;
+            }
+            res.status(500).json({
+                message: "Failed to fetch news",
+                error: error.message,
+            });
+        }
+    }
 }

@@ -61,4 +61,18 @@ export class KnowledgeController {
             res.status(500).json({ message: "Failed to fetch knowledges." });
         }
     }
+
+    async getKnowledgeById(req: any, res: any) {
+        try {
+            const id = Number(req.params.id);
+            if (Number.isNaN(id)) {
+                res.status(400).json({ message: "Invalid knowledge id." });
+                return;
+            }
+            const knowledge = await this.knowledgeService.getKnowledgeById(id);
+            res.status(200).json(knowledge);
+        } catch (error) {
+            res.status(500).json({ message: "Failed to fetch knowledge." });
+        }
+    }
 }

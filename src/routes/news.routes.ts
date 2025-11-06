@@ -10,4 +10,6 @@ router.get(
 );
 
 router.get("/", newsController.getAllNews.bind(newsController));
+router.get("/:id", newsController.getNewsById.bind(newsController));
+
 export default router;

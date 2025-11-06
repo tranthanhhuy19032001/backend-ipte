@@ -29,4 +29,8 @@ export class KnowledgeService {
     }) {
         return this.knowledgeDAO.getKnowledges(filters);
     }
+
+    async getKnowledgeById(id: number) {
+        return this.knowledgeDAO.findById(id);
+    }
 }

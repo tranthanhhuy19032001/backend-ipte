@@ -12,4 +12,9 @@ router.get(
     knowledgeController.selectKnowledges.bind(knowledgeController)
 );
 
+router.get(
+    "/detail/:id",
+    knowledgeController.getKnowledgeById.bind(knowledgeController)
+);
+
 export default router;

@@ -97,4 +97,8 @@ export class NewsService {
     }) {
         return this.newsDAO.findAllNews(filters);
     }
+
+    async getNewsById(id: number): Promise<news | null> {
+        return this.newsDAO.findById(id);
+    }
 }
