@@ -9,4 +9,5 @@ router.get(
     newsController.getNewsAndTips.bind(newsController)
 );
 
+router.get("/", newsController.getAllNews.bind(newsController));
 export default router;

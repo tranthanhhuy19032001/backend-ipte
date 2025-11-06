@@ -187,49 +187,51 @@ model enrollment {
 }
 
 model knowledge {
-  knowledge_id Int            @id @default(autoincrement())
-  title        String         @db.VarChar(255)
-  slug         String         @unique @db.VarChar(255)
-  content      String
-  image        String?
-  status       publish_status @default(DRAFT)
-  published_at DateTime?      @db.Timestamp(6)
-  author_id    Int?
-  created_at   DateTime?      @default(now()) @db.Timestamp(6)
-  updated_at   DateTime?      @default(now()) @db.Timestamp(6)
-  created_by   String?        @db.VarChar(50)
-  updated_by   String?        @db.VarChar(50)
-  version      Int?           @default(1)
-  category_id  Int?
-  description  String?
-  is_prominent Int?           @default(0)
-  comment      comment[]
-  user         user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
+  knowledge_id  Int            @id @default(autoincrement())
+  title         String         @db.VarChar(255)
+  slug          String         @unique @db.VarChar(255)
+  content       String
+  image         String?
+  status        publish_status @default(DRAFT)
+  published_at  DateTime?      @db.Timestamp(6)
+  author_id     Int?
+  created_at    DateTime?      @default(now()) @db.Timestamp(6)
+  updated_at    DateTime?      @default(now()) @db.Timestamp(6)
+  created_by    String?        @db.VarChar(50)
+  updated_by    String?        @db.VarChar(50)
+  version       Int?           @default(1)
+  category_id   Int?
+  description   String?
+  is_prominent  Int?           @default(0)
+  category_type String?        @db.VarChar(50)
+  comment       comment[]
+  user          user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
 
   @@index([published_at], map: "idx_knowledge_published_at")
   @@index([status], map: "idx_knowledge_status")
 }
 
 model news {
-  news_id      Int            @id @default(autoincrement())
-  author_id    Int?
-  category_id  Int?
-  image        String?
-  title        String         @db.VarChar(255)
-  slug         String         @unique @db.VarChar(255)
-  description  String?
-  content      String
-  status       publish_status @default(DRAFT)
-  published_at DateTime?      @db.Timestamp(6)
-  tag_ids      Int[]
-  keywords     String[]       @default([])
-  created_at   DateTime?      @default(now()) @db.Timestamp(6)
-  updated_at   DateTime?      @default(now()) @db.Timestamp(6)
-  created_by   String?        @db.VarChar(50)
-  updated_by   String?        @db.VarChar(50)
-  version      Int?           @default(1)
-  is_prominent Int?           @default(0)
-  user         user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
+  news_id       Int            @id @default(autoincrement())
+  author_id     Int?
+  category_id   Int?
+  image         String?
+  title         String         @db.VarChar(255)
+  slug          String         @unique @db.VarChar(255)
+  description   String?
+  content       String
+  status        publish_status @default(DRAFT)
+  published_at  DateTime?      @db.Timestamp(6)
+  tag_ids       Int[]
+  keywords      String[]       @default([])
+  created_at    DateTime?      @default(now()) @db.Timestamp(6)
+  updated_at    DateTime?      @default(now()) @db.Timestamp(6)
+  created_by    String?        @db.VarChar(50)
+  updated_by    String?        @db.VarChar(50)
+  version       Int?           @default(1)
+  is_prominent  Int?           @default(0)
+  category_type String?        @db.VarChar(50)
+  user          user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
 }
 
 model permission {

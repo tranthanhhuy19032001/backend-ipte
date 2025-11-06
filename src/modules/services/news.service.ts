@@ -83,4 +83,18 @@ export class NewsService {
     async deleteUser(id: number): Promise<news> {
         return this.newsDAO.delete(id);
     }
+
+    async getAllNews(filters: {
+        title?: string;
+        description?: string;
+        slug?: string;
+        status?: any;
+        isProminent?: number;
+        categoryId?: number;
+        categoryType?: string;
+        page: number;
+        pageSize: number;
+    }) {
+        return this.newsDAO.findAllNews(filters);
+    }
 }

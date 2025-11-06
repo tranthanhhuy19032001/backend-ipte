@@ -5,6 +5,8 @@ const router = Router();
 
 const knowledgeController = new KnowledgeController();
 
+router.get("/", knowledgeController.getKnowledges.bind(knowledgeController));
+
 router.get(
     "/:categoryId",
     knowledgeController.selectKnowledges.bind(knowledgeController)

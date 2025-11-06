@@ -15,4 +15,18 @@ export class KnowledgeService {
     async selectKnowledges(categoryId: number, opts: ListOptions) {
         return this.knowledgeDAO.selectKnowledges(categoryId, opts);
     }
+
+    async getKnowledges(filters: {
+        title?: string;
+        slug?: string;
+        description?: string;
+        status?: any;
+        isProminent?: number;
+        categoryId?: number;
+        categoryType?: string;
+        page: number;
+        pageSize: number;
+    }) {
+        return this.knowledgeDAO.getKnowledges(filters);
+    }
 }
