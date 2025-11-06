@@ -1,5 +1,6 @@
 import { CategoryService } from "@services/category.service";
 import { Request, Response } from "express";
+import { url } from "inspector";
 
 export class CategoryController {
     private categoryService: CategoryService;
@@ -24,5 +25,16 @@ export class CategoryController {
     async getHeaderMenu(req: Request, res: Response) {
         const menu = await this.categoryService.getHeaderMenu();
         res.json(menu);
+    }
+
+    async getCategoryTree(req: Request, res: Response) {
+        const { url, slug, categoryType } = req.query;
+        const urlOrSlug =
+            (slug as string | undefined) ?? (url as string | undefined);
+        const categoryTree = await CategoryService.getCategoryTreeBySlug(
+            urlOrSlug as string | undefined,
+            categoryType as string | undefined
+        );
+        res.json(categoryTree);
     }
 }

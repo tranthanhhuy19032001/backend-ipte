@@ -21,9 +21,12 @@ type MenuNode = {
     id: number;
     name: string;
     url: string | null;
-    icon?: string | null;
+    slug: string | null;
+    icon: string | null;
     category_type: string;
-    children?: MenuNode[];
+    description?: string | null;
+    courses?: string | null;
+    children?: MenuNode[] | null;
 };
 
 export class CategoryService {
@@ -142,6 +145,7 @@ export class CategoryService {
                 id,
                 name: r.name,
                 url: r.url,
+                slug: r.slug ?? null,
                 icon: r.icon,
                 category_type: r.category_type,
                 children: [],
@@ -167,5 +171,98 @@ export class CategoryService {
         }
 
         return roots;
+    }
+
+    static async getCategoryTreeBySlug(
+        slugOrUrl?: string,
+        categoryType?: string
+    ): Promise<MenuNode | null> {
+        // 1) Lấy node gốc theo slug hoặc url (ưu tiên slug)
+        const root = await prisma.category.findFirst({
+            where: {
+                AND: [
+                    categoryType ? { category_type: categoryType } : {},
+                    {
+                        OR: [{ slug: slugOrUrl }, { url: slugOrUrl }],
+                    },
+                ],
+            },
+        });
+
+        if (!root) return null;
+
+        // 2) Lấy toàn bộ nodes cùng category_type, có url bắt đầu bằng url gốc
+        // (đủ dữ liệu để dựng cây n cấp)
+        const rows = await prisma.category.findMany({
+            where: {
+                AND: [
+                    { category_type: root.category_type },
+                    // Nếu thiếu url, vẫn lọc theo slug gốc như fallback
+                    root.url
+                        ? { url: { startsWith: root.url } }
+                        : { slug: { startsWith: root.slug ?? "" } },
+                ],
+            },
+            orderBy: { category_id: "asc" },
+        });
+
+        // 3) Index theo id để truy cập nhanh
+        const byId = new Map<number, (typeof rows)[number]>();
+        for (const r of rows) byId.set(Number(r.category_id), r);
+
+        // 4) Build tree dựa trên url prefix + level
+        const buildNode = (r: (typeof rows)[number]): MenuNode => {
+            const node: MenuNode = {
+                id: Number(r.category_id),
+                name: r.name,
+                url: r.url,
+                slug: r.slug,
+                icon: r.icon,
+                category_type: r.category_type,
+                // gốc có description, các node con không cần
+                description:
+                    r.category_id === root.category_id
+                        ? r.description
+                        : undefined,
+                // placeholder: gán courses = tên node (nếu muốn). Nếu có bảng course, thay thế bằng list/JSON từ JOIN.
+                courses:
+                    r.category_id === root.category_id ? undefined : r.name,
+                children: null,
+            };
+
+            // node con trực tiếp: level = level cha + 1 và URL bắt đầu bằng parent.url + '/'
+            // dùng startsWith để tránh “kẹt” vì parent_id tự tham chiếu
+            const parentUrl = r.url ?? "";
+            const expectedLevel = (r.level ?? 0) + 1;
+            const directChildren = rows.filter((x) => {
+                if (x.category_id === r.category_id) return false;
+                const childUrl = x.url ?? "";
+                const lvOk = (x.level ?? 0) === expectedLevel;
+                const urlOk =
+                    parentUrl &&
+                    childUrl.startsWith(
+                        parentUrl.endsWith("/") ? parentUrl : parentUrl + "/"
+                    );
+                return lvOk && urlOk;
+            });
+
+            if (directChildren.length) {
+                node.children = directChildren.map(buildNode);
+            }
+
+            return node;
+        };
+
+        const result = buildNode(root);
+
+        // 5) (tuỳ chọn) sort lại children nếu muốn theo tên hoặc thứ tự custom
+        const sortTreeByIdAsc = (n: MenuNode | null) => {
+            if (!n?.children?.length) return;
+            n.children.sort((a, b) => a.id - b.id); // hoặc theo tên: localeCompare
+            n.children.forEach(sortTreeByIdAsc);
+        };
+        sortTreeByIdAsc(result);
+
+        return result;
     }
 }

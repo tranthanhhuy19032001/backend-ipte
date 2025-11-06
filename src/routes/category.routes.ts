@@ -10,4 +10,9 @@ router.get(
     "/header-menu",
     categoryController.getHeaderMenu.bind(categoryController)
 );
+
+router.get(
+    "/category-tree",
+    categoryController.getCategoryTree.bind(categoryController)
+);
 export default router;
