@@ -34,6 +34,7 @@ export type CourseListQuery = {
     tuition?: string;
     slug?: string;
     category?: string;
+    categoryId?: number;
     sortBy?: "price" | "created_at" | "updated_at";
     orderBy?: "asc" | "desc";
     page?: number;
@@ -152,6 +153,7 @@ export class CourseService {
             tuition,
             slug,
             category,
+            categoryId,
             sortBy: sort_by = "created_at",
             orderBy: sort_order = "asc",
             page = 1,
@@ -224,6 +226,11 @@ export class CourseService {
                           category: {
                               equals: category as $Enums.course_category,
                           },
+                      }
+                    : {},
+                categoryId
+                    ? {
+                          category_id: { equals: categoryId },
                       }
                     : {},
                 slug ? { slug: { equals: slug } } : {},

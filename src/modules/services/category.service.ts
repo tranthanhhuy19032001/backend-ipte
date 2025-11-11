@@ -47,6 +47,18 @@ type MenuNode = {
     children?: MenuNode[] | null;
 };
 
+type CategoryNode = {
+    id: number;
+    name: string | null;
+    slug: string | null;
+    url: string | null;
+    icon: string | null;
+    category_type: string;
+    description: string | null;
+    level: number | null;
+    children: CategoryNode[];
+};
+
 export class CategoryService {
     private categoryDAO: CategoryDAO;
     constructor() {
@@ -191,138 +203,88 @@ export class CategoryService {
         return roots;
     }
 
-    static async getCategoryTreeBySlug(
+    static async getCategoryTree(
         slugOrUrl?: string,
         categoryType?: string
-    ): Promise<MenuNode | null> {
-        // 1) Node gốc theo slug hoặc url
-        const root = await prisma.category.findFirst({
-            where: {
-                AND: [
-                    categoryType ? { category_type: categoryType } : {},
-                    { OR: [{ slug: slugOrUrl }, { url: slugOrUrl }] },
-                ],
-            },
-        });
-        if (!root) return null;
-
-        // 2) Lấy toàn bộ categories trong cùng category_type và cùng prefix url
-        const rows = await prisma.category.findMany({
-            where: {
-                AND: [
-                    { category_type: root.category_type },
-                    root.url
-                        ? { url: { startsWith: root.url } }
-                        : { slug: { startsWith: root.slug ?? "" } },
-                ],
-            },
+    ): Promise<CategoryNode[] | CategoryNode | null> {
+        // 1) Lấy tất cả categories (để có thể include children của categoryType, kể cả khác type)
+        const categories = await prisma.category.findMany({
             orderBy: { category_id: "asc" },
         });
+        if (!categories.length) return slugOrUrl ? null : [];
 
-        // 3) Lấy toàn bộ courses của *mọi* category xuất hiện trong cây (1 query)
-        const categoryIds = rows.map((r) => Number(r.category_id));
-        const courses = await prisma.course.findMany({
-            where: { category_id: { in: categoryIds } },
-            orderBy: [{ category_id: "asc" }, { course_id: "asc" }],
-            select: {
-                course_id: true,
-                course_code: true,
-                course_name: true,
-                slug: true,
-                title: true,
-                level: true,
-                mode: true,
-                language: true,
-                price: true,
-                duration: true,
-                start_date: true,
-                end_date: true,
-                image: true,
-                tuition: true,
-                schedule: true,
-                category_id: true,
-            },
-        });
-
-        // 4) Group courses theo category_id
-        const coursesByCategory = new Map<number, CourseSummary[]>();
-        for (const c of courses) {
-            const k = Number(c.category_id);
-            const list = coursesByCategory.get(k) ?? [];
-            list.push({
-                id: Number(c.course_id),
-                code: c.course_code,
-                name: c.course_name,
-                slug: c.slug,
-                title: c.title,
-                level: String(c.level),
-                mode: String(c.mode),
-                language: c.language,
-                price: c.price, // hoặc Number(c.price ?? 0)
-                duration: c.duration,
-                start_date: c.start_date,
-                end_date: c.end_date,
-                image: c.image,
-                tuition: c.tuition,
-                schedule: c.schedule,
-            });
-            coursesByCategory.set(k, list);
-        }
-
-        // 5) Build tree dựa theo url prefix + level
-        const buildNode = (r: (typeof rows)[number]): MenuNode => {
-            const node: MenuNode = {
-                id: Number(r.category_id),
-                name: r.name,
-                url: r.url,
+        // 2) Khởi tạo map node
+        const byId = new Map<number, CategoryNode>();
+        for (const r of categories) {
+            const id = Number(r.category_id);
+            byId.set(id, {
+                id,
+                name: (r as any).name ?? null, // cột "name" trong DB
                 slug: r.slug,
+                url: r.url,
                 icon: r.icon,
                 category_type: r.category_type,
-                description:
-                    r.category_id === root.category_id
-                        ? r.description
-                        : undefined,
-                courses: coursesByCategory.get(Number(r.category_id)) ?? [], // mảng (rỗng nếu không có)
-                children: null,
+                description: r.description,
+                level: r.level,
+                children: [],
+            });
+        }
+
+        // 3) Gắn parent/child theo parent_id (không lọc theo type ở bước attach)
+        const rootsAll: CategoryNode[] = [];
+        for (const r of categories) {
+            const id = Number(r.category_id);
+            const node = byId.get(id)!;
+            const parentId = r.parent_id == null ? null : Number(r.parent_id);
+
+            const isRoot =
+                parentId == null || parentId === id || !byId.has(parentId);
+
+            if (isRoot) {
+                rootsAll.push(node);
+            } else {
+                const parent = byId.get(parentId)!;
+                parent.children.push(node);
+            }
+        }
+
+        // 4) Nếu có slugOrUrl: trả về subtree của node khớp slug/url
+        if (slugOrUrl) {
+            let target: CategoryNode | undefined;
+            for (const n of byId.values()) {
+                if (n.slug === slugOrUrl || n.url === slugOrUrl) {
+                    target = n;
+                    break;
+                }
+            }
+            return target ?? null;
+        }
+
+        // 5) Không có slugOrUrl: nếu có categoryType -> trả về các root thuộc type đó,
+        //    nhưng vẫn include toàn bộ con cháu (đã attach ở bước 3).
+        if (categoryType) {
+            // Root của "nhóm type" = node có category_type = categoryType và:
+            // - hoặc không có parent,
+            // - hoặc parent có category_type KHÁC categoryType,
+            // - hoặc parent không tồn tại (edge-case)
+            const isTypeRoot = (n: CategoryNode) => {
+                if (n.category_type !== categoryType) return false;
+                // tìm parent từ categories gốc
+                const row = categories.find(
+                    (c) => Number(c.category_id) === n.id
+                )!;
+                const pid =
+                    row.parent_id == null ? null : Number(row.parent_id);
+                if (pid == null || pid === n.id || !byId.has(pid)) return true;
+                const pNode = byId.get(pid)!;
+                return pNode.category_type !== categoryType;
             };
 
-            const parentUrl = r.url ?? "";
-            const expectedLevel = (r.level ?? 0) + 1;
+            const typeRoots = Array.from(byId.values()).filter(isTypeRoot);
+            return typeRoots;
+        }
 
-            const directChildren = rows.filter((x) => {
-                if (x.category_id === r.category_id) return false;
-                const childUrl = x.url ?? "";
-                const lvOk = (x.level ?? 0) === expectedLevel;
-                const urlOk =
-                    parentUrl &&
-                    childUrl.startsWith(
-                        parentUrl.endsWith("/") ? parentUrl : parentUrl + "/"
-                    );
-                return lvOk && urlOk;
-            });
-
-            if (directChildren.length) {
-                node.children = directChildren.map(buildNode);
-            }
-
-            return node;
-        };
-
-        const result = buildNode(root);
-
-        // 6) (tuỳ chọn) sort children & courses
-        const sortTree = (n: MenuNode | null) => {
-            if (!n) return;
-            if (n.children?.length) {
-                n.children.sort((a, b) => a.id - b.id);
-                n.children.forEach(sortTree);
-            }
-            if (n.courses?.length) {
-                n.courses.sort((a, b) => a.id - b.id);
-            }
-        };
-        sortTree(result);
-
-        return result;
+        // 6) Nếu không lọc gì: trả toàn bộ roots (mọi type)
+        return rootsAll;
     }
 }

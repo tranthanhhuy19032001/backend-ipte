@@ -45,6 +45,7 @@ export class CourseController {
                 schedule,
                 tuition,
                 category,
+                categoryId,
                 orderBy,
                 sortBy,
                 page,
@@ -60,6 +61,7 @@ export class CourseController {
                 tuition: tuition as string | undefined,
                 slug: slug as string | undefined,
                 category: category as string | undefined,
+                categoryId: categoryId != null ? Number(categoryId) : undefined,
                 orderBy: orderBy as "asc" | "desc" | undefined,
                 sortBy: sortBy as
                     | "price"

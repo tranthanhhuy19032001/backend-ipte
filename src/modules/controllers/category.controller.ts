@@ -31,7 +31,7 @@ export class CategoryController {
         const { url, slug, categoryType } = req.query;
         const urlOrSlug =
             (slug as string | undefined) ?? (url as string | undefined);
-        const categoryTree = await CategoryService.getCategoryTreeBySlug(
+        const categoryTree = await CategoryService.getCategoryTree(
             urlOrSlug as string | undefined,
             categoryType as string | undefined
         );
