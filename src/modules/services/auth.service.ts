@@ -1,12 +1,7 @@
 // src/services/auth.service.ts
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import {
-    signAccessToken,
-    signRefreshToken,
-    hashToken,
-    verifyToken,
-} from "@utils/jwt";
+import { signAccessToken, signRefreshToken, hashToken, verifyToken } from "@utils/jwt";
 import { randomUUID } from "crypto";
 import { Request, Response } from "express";
 
@@ -46,11 +41,7 @@ export class AuthService {
      * Đăng nhập: tạo session_id mới (thiết bị mới), cấp access + refresh,
      * lưu refresh (hash) kèm jti, session_id, user_agent, ip, ...
      */
-    static async login(
-        input: LoginDTO,
-        req: Request,
-        res: Response
-    ): Promise<OAuth2TokenResponse> {
+    static async login(input: LoginDTO, req: Request, res: Response): Promise<OAuth2TokenResponse> {
         const { usernameOrEmail, password } = input;
 
         // 1) Tìm user theo username hoặc email
@@ -76,16 +67,15 @@ export class AuthService {
         const jti = randomUUID();
 
         // 4) Ký token
-        const { token: accessToken, expiresIn: accessExpiresInRaw } =
-            signAccessToken({
-                sub: user.user_id,
-                username: user.username,
-                email: user.email,
-                roles,
-                roleIds,
-                jti,
-                sid: sessionId, // đưa sid vào access để đồng bộ
-            });
+        const { token: accessToken, expiresIn: accessExpiresInRaw } = signAccessToken({
+            sub: user.user_id,
+            username: user.username,
+            email: user.email,
+            roles,
+            roleIds,
+            jti,
+            sid: sessionId, // đưa sid vào access để đồng bộ
+        });
 
         const { token: refreshToken } = signRefreshToken({
             sub: user.user_id,
@@ -159,10 +149,8 @@ export class AuthService {
         const stored = await prisma.refresh_token.findFirst({
             where: { jti },
         });
-        if (!stored || stored.revoked_at)
-            throw new Error("Invalid refresh token");
-        if (stored.expires_at < new Date())
-            throw new Error("Refresh token expired");
+        if (!stored || stored.revoked_at) throw new Error("Invalid refresh token");
+        if (stored.expires_at < new Date()) throw new Error("Refresh token expired");
 
         // Khớp hash để tránh ai đó đoán jti
         const sameHash = stored.token_hash === hashToken(refreshToken);
@@ -187,15 +175,14 @@ export class AuthService {
 
         // 4) Rotate: tạo jti mới, ký access + refresh mới (giữ nguyên sid)
         const newJti = randomUUID();
-        const { token: newAccess, expiresIn: accessExpiresInRaw } =
-            signAccessToken({
-                sub: user.user_id,
-                username: user.username,
-                email: user.email,
-                roles,
-                jti: newJti,
-                sid, // giữ nguyên session_id
-            });
+        const { token: newAccess, expiresIn: accessExpiresInRaw } = signAccessToken({
+            sub: user.user_id,
+            username: user.username,
+            email: user.email,
+            roles,
+            jti: newJti,
+            sid, // giữ nguyên session_id
+        });
 
         const { token: newRefresh } = signRefreshToken({
             sub: user.user_id,

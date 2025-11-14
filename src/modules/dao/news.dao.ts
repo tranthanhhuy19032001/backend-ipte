@@ -27,9 +27,7 @@ export class NewsDAO {
     }
 
     async findAll(): Promise<NewsJoined[]> {
-        const rows = await prisma.$queryRaw<
-            NewsJoined[]
-        >`SELECT n.news_id as id,
+        const rows = await prisma.$queryRaw<NewsJoined[]>`SELECT n.news_id as id,
                     n.image,
                     n.title,
                     n.description,
@@ -44,9 +42,7 @@ export class NewsDAO {
         return rows;
     }
 
-    async create(
-        data: Omit<news, "id" | "createdAt" | "updatedAt">
-    ): Promise<news> {
+    async create(data: Omit<news, "id" | "createdAt" | "updatedAt">): Promise<news> {
         return prisma.news.create({
             data,
         });

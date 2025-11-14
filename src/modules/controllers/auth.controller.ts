@@ -19,15 +19,12 @@ function getCookie(req: Request, name: string): string | undefined {
 export class AuthController {
     async login(req: Request, res: Response): Promise<void> {
         try {
-            const { username, email, usernameOrEmail, password, deviceName } =
-                req.body;
+            const { username, email, usernameOrEmail, password, deviceName } = req.body;
 
-            const credential: string | undefined =
-                usernameOrEmail ?? username ?? email;
+            const credential: string | undefined = usernameOrEmail ?? username ?? email;
             if (!credential || !password) {
                 res.status(400).json({
-                    message:
-                        "Thiếu tham số: cần usernameOrEmail (hoặc username/email) và password",
+                    message: "Thiếu tham số: cần usernameOrEmail (hoặc username/email) và password",
                 });
                 return;
             }
@@ -59,11 +56,7 @@ export class AuthController {
                 return;
             }
 
-            const tokens = await AuthService.refreshToken(
-                refreshToken,
-                req,
-                res
-            );
+            const tokens = await AuthService.refreshToken(refreshToken, req, res);
             res.status(200).json(tokens);
         } catch (err: any) {
             res.status(401).json({ message: "Invalid refresh token" });
@@ -102,8 +95,7 @@ export class AuthController {
      */
     async logoutAll(req: Request, res: Response): Promise<void> {
         try {
-            const userId: number | undefined =
-                (req as any).user?.id ?? req.body?.userId;
+            const userId: number | undefined = (req as any).user?.id ?? req.body?.userId;
             if (!userId) {
                 res.status(400).json({ message: "Thiếu userId" });
                 return;

@@ -20,9 +20,7 @@ type ListOptions = {
 
 export class KnowledgeDAO {
     async findAll(): Promise<knowledgeJoined[]> {
-        const rows = await prisma.$queryRaw<
-            knowledgeJoined[]
-        >`SELECT k.knowledge_id as id,
+        const rows = await prisma.$queryRaw<knowledgeJoined[]>`SELECT k.knowledge_id as id,
                             k.image,
                             k.title,
                             k.description,

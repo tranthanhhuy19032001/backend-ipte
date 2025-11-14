@@ -42,21 +42,15 @@ export type CourseListQuery = {
 };
 
 /** Tạo slug duy nhất từ course_name hoặc slug truyền vào */
-async function ensureUniqueSlug(
-    base: string,
-    courseIdToExclude?: number
-): Promise<string> {
-    const baseSlug =
-        slugify(base, { lower: true, strict: true, trim: true }) || "course";
+async function ensureUniqueSlug(base: string, courseIdToExclude?: number): Promise<string> {
+    const baseSlug = slugify(base, { lower: true, strict: true, trim: true }) || "course";
     let candidate = baseSlug;
     let i = 1;
     while (true) {
         const found = await prisma.course.findFirst({
             where: {
                 slug: candidate,
-                ...(courseIdToExclude
-                    ? { course_id: { not: courseIdToExclude } }
-                    : {}),
+                ...(courseIdToExclude ? { course_id: { not: courseIdToExclude } } : {}),
             },
             select: { course_id: true },
         });

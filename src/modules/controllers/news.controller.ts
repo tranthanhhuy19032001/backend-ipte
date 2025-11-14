@@ -18,19 +18,9 @@ export class NewsController {
 
     async getAllNews(req: Request, res: Response): Promise<void> {
         const page = Math.max(1, Number(req.query.page) || 1);
-        const pageSize = Math.max(
-            1,
-            Math.min(Number(req.query.page_size) || 20, 100)
-        );
-        const {
-            title,
-            description,
-            slug,
-            status,
-            isProminent,
-            categoryId,
-            categoryType,
-        } = req.query;
+        const pageSize = Math.max(1, Math.min(Number(req.query.page_size) || 20, 100));
+        const { title, description, slug, status, isProminent, categoryId, categoryType } =
+            req.query;
 
         try {
             const news = await newsService.getAllNews({

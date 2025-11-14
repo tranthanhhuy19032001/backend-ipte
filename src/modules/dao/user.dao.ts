@@ -19,9 +19,7 @@ export class UserDAO {
         return prisma.user.findMany();
     }
 
-    async create(
-        data: Omit<user, "id" | "createdAt" | "updatedAt">
-    ): Promise<user> {
+    async create(data: Omit<user, "id" | "createdAt" | "updatedAt">): Promise<user> {
         return prisma.user.create({
             data,
         });

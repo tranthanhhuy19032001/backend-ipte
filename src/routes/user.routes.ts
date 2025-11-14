@@ -169,17 +169,11 @@ const userController = new UserController();
  *         description: Failed to delete user
  */
 
-router.get("/", authRole([Role.ADMIN]), (req, res) =>
-    userController.getAllUsers(req, res)
-);
-router.get("/me", authRole([Role.ADMIN]), (req, res) =>
-    userController.getMe(req, res)
-);
+router.get("/", authRole([Role.ADMIN]), (req, res) => userController.getAllUsers(req, res));
+router.get("/me", authRole([Role.ADMIN]), (req, res) => userController.getMe(req, res));
 router.get("/:id", (req, res) => userController.getUserById(req, res));
 router.post("/", (req, res) => userController.createUser(req, res));
 router.put("/:id", (req, res) => userController.updateUser(req, res));
-router.delete("/:id", authRole([Role.ADMIN]), (req, res) =>
-    userController.deleteUser(req, res)
-);
+router.delete("/:id", authRole([Role.ADMIN]), (req, res) => userController.deleteUser(req, res));
 
 export default router;

@@ -13,8 +13,7 @@ export class AboutController {
 
     async getById(req: Request, res: Response) {
         const id = Number(req.params.id);
-        if (Number.isNaN(id))
-            return res.status(400).json({ message: "Invalid about_id." });
+        if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid about_id." });
         try {
             const data = await AboutService.getById(id);
             res.json(data);
@@ -43,8 +42,7 @@ export class AboutController {
 
     async update(req: Request, res: Response) {
         const id = Number(req.params.id);
-        if (Number.isNaN(id))
-            return res.status(400).json({ message: "Invalid about_id." });
+        if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid about_id." });
         try {
             const updated = await AboutService.update(id, req.body);
             res.json(updated);
@@ -57,8 +55,7 @@ export class AboutController {
 
     async remove(req: Request, res: Response) {
         const id = Number(req.params.id);
-        if (Number.isNaN(id))
-            return res.status(400).json({ message: "Invalid about_id." });
+        if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid about_id." });
         try {
             await AboutService.remove(id);
             res.status(204).end();

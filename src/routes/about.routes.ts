@@ -156,11 +156,7 @@ const aboutController = new AboutController();
  *         description: Failed to delete about
  */
 
-router.post(
-    "/",
-    authRole([Role.ADMIN]),
-    aboutController.create.bind(aboutController)
-);
+router.post("/", authRole([Role.ADMIN]), aboutController.create.bind(aboutController));
 router.get("/", aboutController.list.bind(aboutController));
 router.get("/:id", aboutController.getById.bind(aboutController));
 router.put("/:id", aboutController.update.bind(aboutController));

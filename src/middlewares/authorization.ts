@@ -1,9 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken, DecodedToken } from "@utils/jwt";
-import {
-    getPermissionsByRoleIds,
-    getPermissionsByUserId,
-} from "@services/permissions.service";
+import { getPermissionsByRoleIds, getPermissionsByUserId } from "@services/permissions.service";
 import { Role } from "@enums/role.enum";
 
 /**
@@ -16,35 +13,25 @@ export function authRole(allowedRoles: Role[]) {
         try {
             const authHeader = req.headers["authorization"];
             if (!authHeader || !authHeader.startsWith("Bearer ")) {
-                return res
-                    .status(401)
-                    .json({ message: "Access denied. No token provided." });
+                return res.status(401).json({ message: "Access denied. No token provided." });
             }
 
             const token = authHeader.split(" ")[1];
             const decoded = verifyToken(token, "access") as DecodedToken;
 
             if (!decoded.roles || !Array.isArray(decoded.roles)) {
-                return res
-                    .status(403)
-                    .json({ message: "Forbidden. Roles missing." });
+                return res.status(403).json({ message: "Forbidden. Roles missing." });
             }
 
-            const hasRole = decoded.roles.some((r) =>
-                allowedRoles.includes(r as Role)
-            );
+            const hasRole = decoded.roles.some((r) => allowedRoles.includes(r as Role));
             if (!hasRole) {
-                return res
-                    .status(403)
-                    .json({ message: "Forbidden. Insufficient role." });
+                return res.status(403).json({ message: "Forbidden. Insufficient role." });
             }
 
             (req as any).user = decoded;
             next();
         } catch {
-            return res
-                .status(401)
-                .json({ message: "Invalid or expired token." });
+            return res.status(401).json({ message: "Invalid or expired token." });
         }
     };
 }
@@ -59,9 +46,7 @@ export function authPermission(allowedPermissions: string[]) {
         try {
             const authHeader = req.headers.authorization;
             if (!authHeader?.startsWith("Bearer ")) {
-                return res
-                    .status(401)
-                    .json({ message: "Access denied. No token provided." });
+                return res.status(401).json({ message: "Access denied. No token provided." });
             }
 
             const token = authHeader.split(" ")[1];
@@ -79,17 +64,13 @@ export function authPermission(allowedPermissions: string[]) {
 
             const ok = allowedPermissions.some((p) => perms.includes(p));
             if (!ok) {
-                return res
-                    .status(403)
-                    .json({ message: "Forbidden. Insufficient permission." });
+                return res.status(403).json({ message: "Forbidden. Insufficient permission." });
             }
 
             (req as any).user = decoded;
             next();
         } catch (err) {
-            return res
-                .status(401)
-                .json({ message: "Invalid or expired token." });
+            return res.status(401).json({ message: "Invalid or expired token." });
         }
     };
 }

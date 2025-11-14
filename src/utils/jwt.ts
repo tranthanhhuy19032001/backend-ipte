@@ -84,10 +84,7 @@ export function signRefreshToken(payload: SignInput) {
  * - Check signature
  * - Check typ (access/refresh)
  */
-export function verifyToken(
-    token: string,
-    expectedType: "access" | "refresh"
-): DecodedToken {
+export function verifyToken(token: string, expectedType: "access" | "refresh"): DecodedToken {
     const secret =
         expectedType === "access"
             ? process.env.JWT_ACCESS_SECRET!

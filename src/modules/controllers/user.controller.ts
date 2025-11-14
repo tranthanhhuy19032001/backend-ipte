@@ -42,12 +42,7 @@ export class UserController {
     async createUser(req: Request, res: Response): Promise<void> {
         try {
             const { username, email, password, roleId } = req.body;
-            const newUser = await userService.registerUser(
-                username,
-                email,
-                password,
-                roleId
-            );
+            const newUser = await userService.registerUser(username, email, password, roleId);
             res.status(201).json(newUser);
         } catch (error: any) {
             res.status(500).json({

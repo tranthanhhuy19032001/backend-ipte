@@ -159,9 +159,7 @@ export class CategoryService {
     }
 
     async getHeaderMenu(): Promise<MenuNode[]> {
-        const rows = (await this.categoryDAO.findAllByCategoryType(
-            "HEADER_MENU"
-        )) as any[];
+        const rows = (await this.categoryDAO.findAllByCategoryType("HEADER_MENU")) as any[];
 
         // Build n-level tree
         const byId = new Map<number, MenuNode>();
@@ -237,8 +235,7 @@ export class CategoryService {
             const node = byId.get(id)!;
             const parentId = r.parent_id == null ? null : Number(r.parent_id);
 
-            const isRoot =
-                parentId == null || parentId === id || !byId.has(parentId);
+            const isRoot = parentId == null || parentId === id || !byId.has(parentId);
 
             if (isRoot) {
                 rootsAll.push(node);
@@ -270,11 +267,8 @@ export class CategoryService {
             const isTypeRoot = (n: CategoryNode) => {
                 if (n.category_type !== categoryType) return false;
                 // tìm parent từ categories gốc
-                const row = categories.find(
-                    (c) => Number(c.category_id) === n.id
-                )!;
-                const pid =
-                    row.parent_id == null ? null : Number(row.parent_id);
+                const row = categories.find((c) => Number(c.category_id) === n.id)!;
+                const pid = row.parent_id == null ? null : Number(row.parent_id);
                 if (pid == null || pid === n.id || !byId.has(pid)) return true;
                 const pNode = byId.get(pid)!;
                 return pNode.category_type !== categoryType;

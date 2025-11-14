@@ -8,8 +8,7 @@ export class CategoryController {
         this.categoryService = new CategoryService();
     }
     async getCategories(req: Request, res: Response) {
-        const { categoryName, categoryType, slug, url, page, pageSize } =
-            req.query;
+        const { categoryName, categoryType, slug, url, page, pageSize } = req.query;
 
         const categories = await CategoryService.getCategories({
             categoryName: categoryName as string | undefined,
@@ -29,8 +28,7 @@ export class CategoryController {
 
     async getCategoryTree(req: Request, res: Response) {
         const { url, slug, categoryType } = req.query;
-        const urlOrSlug =
-            (slug as string | undefined) ?? (url as string | undefined);
+        const urlOrSlug = (slug as string | undefined) ?? (url as string | undefined);
         const categoryTree = await CategoryService.getCategoryTree(
             urlOrSlug as string | undefined,
             categoryType as string | undefined

@@ -1,15 +1,12 @@
-import express, { Express } from "express";
-import * as bodyParser from "body-parser";
+﻿import express, { Express } from "express";
 import cors from "cors";
 
 import { setupSwagger } from "@config/swagger";
-
 import errorHandler from "@middlewares/errorHandler";
 
 import userRoutes from "@routes/user.routes";
 import authRoutes from "@routes/auth.routes";
 import aboutRoutes from "@routes/about.routes";
-
 import courseRoutes from "@routes/course.routes";
 import teacherRoutes from "@routes/teacher.routes";
 import newsRoutes from "@routes/news.routes";
@@ -19,16 +16,16 @@ import categoryRoutes from "@routes/category.routes";
 
 const app: Express = express();
 
-// Middleware
+const allowedOrigins = ["http://localhost:3000", "https://your-frontend.com"];
+
 app.use(
     cors({
-        origin: ["http://localhost:3000", "https://your-frontend.com"],
-        credentials: true, // để cookie 'rt' gửi kèm
+        origin: allowedOrigins,
+        credentials: true, // allow sending refresh token cookies
     })
 );
-app.use(bodyParser.json());
+app.use(express.json());
 
-// Routes
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
@@ -41,9 +38,8 @@ app.use("/api/categories", categoryRoutes);
 
 app.use(errorHandler);
 
-// Default route
-app.get("/", (req, res) => {
-    res.send("Welcome to IPTE Backend API 🚀");
+app.get("/", (_req, res) => {
+    res.send("Welcome to the IPTE Backend API");
 });
 
 setupSwagger(app);

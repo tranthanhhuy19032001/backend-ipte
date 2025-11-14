@@ -1,12 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 
 // đặt ở cuối cùng sau tất cả route
-function errorHandler(
-    err: any,
-    req: Request,
-    res: Response,
-    next: NextFunction
-) {
+function errorHandler(err: any, req: Request, res: Response, next: NextFunction) {
     // log ra console
     console.error(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     console.error("Error message:", err.message);

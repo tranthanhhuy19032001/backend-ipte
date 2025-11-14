@@ -173,23 +173,11 @@ const courseController = new CourseController();
 
 router.get("/detail", courseController.getCourseDetail.bind(courseController));
 
-router.post(
-    "/",
-    authRole([Role.ADMIN]),
-    courseController.create.bind(courseController)
-);
+router.post("/", authRole([Role.ADMIN]), courseController.create.bind(courseController));
 router.get("/", courseController.list.bind(courseController));
 router.get("/:id", courseController.getById.bind(courseController));
-router.put(
-    "/:id",
-    authRole([Role.ADMIN]),
-    courseController.update.bind(courseController)
-);
-router.delete(
-    "/:id",
-    authRole([Role.ADMIN]),
-    courseController.remove.bind(courseController)
-);
+router.put("/:id", authRole([Role.ADMIN]), courseController.update.bind(courseController));
+router.delete("/:id", authRole([Role.ADMIN]), courseController.remove.bind(courseController));
 
 router.get("/slug/:slug", courseController.getBySlug.bind(courseController));
 

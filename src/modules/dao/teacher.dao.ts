@@ -13,9 +13,7 @@ export class TeacherDAO {
         return prisma.teacher.findMany();
     }
 
-    async create(
-        data: Omit<teacher, "id" | "createdAt" | "updatedAt">
-    ): Promise<teacher> {
+    async create(data: Omit<teacher, "id" | "createdAt" | "updatedAt">): Promise<teacher> {
         return prisma.teacher.create({
             data,
         });
