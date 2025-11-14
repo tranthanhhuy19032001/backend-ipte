@@ -171,6 +171,8 @@ const courseController = new CourseController();
  *       500: { description: Failed to delete course }
  */
 
+router.get("/detail", courseController.getCourseDetail.bind(courseController));
+
 router.post(
     "/",
     authRole([Role.ADMIN]),

@@ -98,7 +98,13 @@ export class NewsService {
         return this.newsDAO.findAllNews(filters);
     }
 
-    async getNewsById(id: number): Promise<news | null> {
-        return this.newsDAO.findById(id);
+    async getNewsDetail(id?: number, slug?: string): Promise<news | null> {
+        if (id !== undefined) {
+            return this.newsDAO.findById(id);
+        } else if (slug !== undefined) {
+            return this.newsDAO.findBySlug(slug);
+        } else {
+            throw new Error("Either id or slug must be provided.");
+        }
     }
 }

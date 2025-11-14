@@ -53,15 +53,14 @@ export class NewsController {
         }
     }
 
-    async getNewsById(req: Request, res: Response): Promise<void> {
-        const id = Number(req.params.id);
-        if (Number.isNaN(id)) {
-            res.status(400).json({ message: "Invalid news id." });
-            return;
-        }
+    async getNewsDetail(req: Request, res: Response): Promise<void> {
         try {
-            const news = await newsService.getNewsById(id);
-            res.status(200).json(news);
+            const { id, slug } = req.query;
+            const newsDetail = await newsService.getNewsDetail(
+                id ? Number(id) : undefined,
+                slug ? String(slug) : undefined
+            );
+            res.status(200).json(newsDetail);
         } catch (error: any) {
             if (error?.message === "NEWS_NOT_FOUND") {
                 res.status(404).json({ message: "News not found." });

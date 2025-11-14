@@ -131,4 +131,20 @@ export class CourseController {
             return res.status(500).json({ message: "Failed to get course." });
         }
     }
+
+    async getCourseDetail(req: Request, res: Response) {
+        try {
+            const { id, slug } = req.query;
+            const courseDetail = await CourseService.getCourseDetail(
+                id ? Number(id) : undefined,
+                slug ? String(slug) : undefined
+            );
+            res.status(200).json(courseDetail);
+        } catch (e: any) {
+            if (e?.message === "COURSE_NOT_FOUND") {
+                return res.status(404).json({ message: "Course not found." });
+            }
+            return res.status(500).json({ message: "Failed to get course." });
+        }
+    }
 }

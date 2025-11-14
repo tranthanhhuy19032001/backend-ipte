@@ -30,7 +30,13 @@ export class KnowledgeService {
         return this.knowledgeDAO.getKnowledges(filters);
     }
 
-    async getKnowledgeById(id: number) {
-        return this.knowledgeDAO.findById(id);
+    async getKnowledgeDetail(id?: number, slug?: string): Promise<any | null> {
+        if (id !== undefined) {
+            return this.knowledgeDAO.findById(id);
+        } else if (slug !== undefined) {
+            return this.knowledgeDAO.findBySlug(slug);
+        } else {
+            throw new Error("Either id or slug must be provided.");
+        }
     }
 }

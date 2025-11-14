@@ -295,4 +295,14 @@ export class CourseService {
         if (!found) throw new Error("COURSE_NOT_FOUND");
         return found;
     }
+
+    static async getCourseDetail(id?: number, slug?: string) {
+        if (id !== undefined) {
+            return this.getCourseById(id);
+        } else if (slug !== undefined) {
+            return this.getCourseBySlug(slug);
+        } else {
+            throw new Error("Either id or slug must be provided.");
+        }
+    }
 }

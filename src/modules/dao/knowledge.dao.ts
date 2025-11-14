@@ -153,4 +153,10 @@ export class KnowledgeDAO {
             where: { knowledge_id: id },
         });
     }
+
+    async findBySlug(slug: string): Promise<knowledge | null> {
+        return prisma.knowledge.findUnique({
+            where: { slug: slug },
+        });
+    }
 }

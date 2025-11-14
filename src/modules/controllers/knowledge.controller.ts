@@ -24,7 +24,9 @@ export class KnowledgeController {
             );
             res.status(200).json(knowledges);
         } catch (error) {
-            res.status(500).json({ message: "Failed to fetch knowledges." });
+            res.status(500).json({
+                message: "Failed to fetch knowledges by category id.",
+            });
         }
     }
 
@@ -58,18 +60,19 @@ export class KnowledgeController {
             });
             res.status(200).json(knowledges);
         } catch (error) {
-            res.status(500).json({ message: "Failed to fetch knowledges." });
+            res.status(500).json({
+                message: "Failed to fetch knowledge list.",
+            });
         }
     }
 
-    async getKnowledgeById(req: any, res: any) {
+    async getKnowledgeDetail(req: any, res: any) {
         try {
-            const id = Number(req.params.id);
-            if (Number.isNaN(id)) {
-                res.status(400).json({ message: "Invalid knowledge id." });
-                return;
-            }
-            const knowledge = await this.knowledgeService.getKnowledgeById(id);
+            const { id, slug } = req.query;
+            const knowledge = await this.knowledgeService.getKnowledgeDetail(
+                id ? Number(id) : undefined,
+                slug ? String(slug) : undefined
+            );
             res.status(200).json(knowledge);
         } catch (error) {
             res.status(500).json({ message: "Failed to fetch knowledge." });

@@ -20,6 +20,12 @@ export class NewsDAO {
         });
     }
 
+    async findBySlug(slug: string): Promise<news | null> {
+        return prisma.news.findUnique({
+            where: { slug: slug },
+        });
+    }
+
     async findAll(): Promise<NewsJoined[]> {
         const rows = await prisma.$queryRaw<
             NewsJoined[]
