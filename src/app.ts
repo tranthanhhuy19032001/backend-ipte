@@ -41,7 +41,9 @@ app.use(errorHandler);
 app.get("/", (_req, res) => {
     res.send("Welcome to the IPTE Backend API");
 });
-
+(BigInt.prototype as any).toJSON = function () {
+    return Number(this);
+};
 setupSwagger(app);
 
 export default app;

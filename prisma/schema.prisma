@@ -31,32 +31,6 @@ model about_me {
   youtube_url  String?   @db.VarChar(255)
 }
 
-model category {
-  category_id        Int       @id @default(autoincrement())
-  icon               String?
-  name               String    @db.VarChar(200)
-  slug               String    @db.VarChar(200)
-  description        String?
-  parent_id          Int?
-  category_type      String    @db.VarChar(50)
-  meta_title         String?   @db.VarChar(255)
-  meta_description   String?
-  h1_heading         String?   @db.VarChar(255)
-  seo_content_top    String?
-  seo_content_bottom String?
-  canonical_url      String?
-  noindex            Boolean?  @default(false)
-  created_at         DateTime? @default(now()) @db.Timestamp(6)
-  updated_at         DateTime? @default(now()) @db.Timestamp(6)
-  created_by         String?   @db.VarChar(50)
-  updated_by         String?   @db.VarChar(50)
-  version            Int?      @default(1)
-  url                String?   @db.VarChar(50)
-  level              Int?
-  is_featured        Boolean?  @default(false)
-  is_disable         Boolean?  @default(false)
-}
-
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model comment {
   comment_id        Int        @id @default(autoincrement())
@@ -121,7 +95,6 @@ model consultation_request {
   created_by              String?         @db.VarChar(50)
   updated_by              String?         @db.VarChar(50)
   version                 Int?            @default(1)
-  target_score            String?         @db.VarChar(255)
   user                    user?           @relation(fields: [assigned_to], references: [user_id], onUpdate: NoAction)
   course                  course?         @relation(fields: [course_id], references: [course_id], onUpdate: NoAction)
 
@@ -152,8 +125,8 @@ model course {
   category             course_category?       @default(BASIS)
   schedule             String?                @db.VarChar(255)
   tuition              String?                @db.VarChar(255)
-  content              String?
-  category_id          Int                    @default(autoincrement())
+  content              String?                @db.VarChar(255)
+  category_id          Int?
   comment              comment[]
   commitment           commitment[]
   consultation_request consultation_request[]
@@ -205,7 +178,7 @@ model knowledge {
   category_id   Int?
   description   String?
   is_prominent  Int?           @default(0)
-  category_type String?        @db.VarChar(50)
+  category_type String?        @db.VarChar(255)
   comment       comment[]
   user          user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
 
@@ -231,8 +204,8 @@ model news {
   created_by    String?        @db.VarChar(50)
   updated_by    String?        @db.VarChar(50)
   version       Int?           @default(1)
-  is_prominent  Int?           @default(0)
-  category_type String?        @db.VarChar(50)
+  is_prominent  Boolean?       @default(false)
+  category_type String?        @db.VarChar(255)
   user          user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
 }
 
@@ -399,6 +372,32 @@ model user_role {
   user       user      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([user_id, role_id])
+}
+
+model category {
+  category_id        Int       @id @default(autoincrement())
+  icon               String?
+  name               String    @db.VarChar(200)
+  slug               String    @db.VarChar(200)
+  description        String?
+  parent_id          BigInt?
+  category_type      String    @db.VarChar(50)
+  meta_title         String?   @db.VarChar(255)
+  meta_description   String?
+  h1_heading         String?   @db.VarChar(255)
+  seo_content_top    String?
+  seo_content_bottom String?
+  canonical_url      String?
+  noindex            Boolean?  @default(false)
+  url                String?
+  level              Int?
+  is_featured        Boolean?  @default(false)
+  is_disable         Boolean?  @default(false)
+  created_at         DateTime? @default(now()) @db.Timestamp(6)
+  updated_at         DateTime? @default(now()) @db.Timestamp(6)
+  created_by         String?   @db.VarChar(50)
+  updated_by         String?   @db.VarChar(50)
+  version            Int?      @default(1)
 }
 
 enum consult_status {
