@@ -53,6 +53,8 @@ model category {
   version            Int?      @default(1)
   url                String?   @db.VarChar(50)
   level              Int?
+  is_featured        Boolean?  @default(false)
+  is_disable         Boolean?  @default(false)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

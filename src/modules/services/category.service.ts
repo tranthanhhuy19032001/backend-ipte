@@ -41,6 +41,8 @@ type MenuNode = {
     url: string | null;
     slug: string | null;
     icon: string | null;
+    is_featured: boolean;
+    is_disable: boolean;
     category_type: string;
     description?: string | null; // chỉ gắn ở root
     courses?: CourseSummary[] | null; // mảng khóa học
@@ -53,6 +55,8 @@ type CategoryNode = {
     slug: string | null;
     url: string | null;
     icon: string | null;
+    is_featured: boolean;
+    is_disable: boolean;
     category_type: string;
     description: string | null;
     level: number | null;
@@ -175,6 +179,8 @@ export class CategoryService {
                 url: r.url,
                 slug: r.slug ?? null,
                 icon: r.icon,
+                is_featured: Boolean(r.is_featured),
+                is_disable: Boolean(r.is_disable),
                 category_type: r.category_type,
                 children: [],
             });
@@ -221,6 +227,8 @@ export class CategoryService {
                 slug: r.slug,
                 url: r.url,
                 icon: r.icon,
+                is_featured: Boolean(r.is_featured),
+                is_disable: Boolean(r.is_disable),
                 category_type: r.category_type,
                 description: r.description,
                 level: r.level,
