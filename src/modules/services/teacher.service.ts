@@ -72,4 +72,24 @@ export class TeacherService {
     async deleteTeacher(id: number): Promise<teacher> {
         return this.teacherDAO.delete(id);
     }
+
+    async getTeachers(filters: {
+        name?: string;
+        overallScore?: number;
+        listeningScore?: number;
+        speakingScore?: number;
+        writingScore?: number;
+        page: number;
+        pageSize: number;
+    }): Promise<{ items: teacher[]; total: number }> {
+        return this.teacherDAO.findWithFilters(filters);
+    }
+
+    async getTeacherDetail(id?: number): Promise<teacher | null> {
+        if (id !== undefined) {
+            return this.teacherDAO.findById(id);
+        } else {
+            throw new Error("Either id or slug must be provided.");
+        }
+    }
 }

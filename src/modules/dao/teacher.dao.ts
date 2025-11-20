@@ -31,4 +31,65 @@ export class TeacherDAO {
             where: { teacher_id: id },
         });
     }
+
+    async findWithFilters(filters: {
+        name?: string;
+        overallScore?: number;
+        listeningScore?: number;
+        speakingScore?: number;
+        writingScore?: number;
+        page: number;
+        pageSize: number;
+    }): Promise<{
+        items: teacher[];
+        page: number;
+        page_size: number;
+        total: number;
+        total_pages: number;
+    }> {
+        const whereClause: any = {};
+
+        if (filters.name) {
+            whereClause.name = {
+                contains: filters.name,
+                mode: "insensitive",
+            };
+        }
+        if (filters.overallScore !== undefined) {
+            whereClause.overall_score = filters.overallScore;
+        }
+        if (filters.listeningScore !== undefined) {
+            whereClause.listening_score = filters.listeningScore;
+        }
+        if (filters.speakingScore !== undefined) {
+            whereClause.speaking_score = filters.speakingScore;
+        }
+        if (filters.writingScore !== undefined) {
+            whereClause.writing_score = filters.writingScore;
+        }
+
+        const skip = (filters.page - 1) * filters.pageSize;
+        const take = filters.pageSize;
+
+        const [items, total] = await Promise.all([
+            prisma.teacher.findMany({
+                where: whereClause,
+                skip,
+                take,
+            }),
+            prisma.teacher.count({
+                where: whereClause,
+            }),
+        ]);
+
+        const total_pages = Math.ceil(total / filters.pageSize);
+
+        return {
+            items,
+            page: filters.page,
+            page_size: filters.pageSize,
+            total,
+            total_pages,
+        };
+    }
 }
