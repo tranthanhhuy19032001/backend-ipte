@@ -122,7 +122,7 @@ model course {
   created_by           String?                @db.VarChar(50)
   updated_by           String?                @db.VarChar(50)
   version              Int?                   @default(1)
-  category             course_category?       @default(BASIS)
+  category             course_category?
   schedule             String?                @db.VarChar(255)
   tuition              String?                @db.VarChar(255)
   content              String?                @db.VarChar(255)
@@ -335,6 +335,7 @@ model teacher {
   created_by      String?   @db.VarChar(50)
   updated_by      String?   @db.VarChar(50)
   version         Int?      @default(1)
+  slug            String    @default("") @db.VarChar(255)
   user            user      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }
 

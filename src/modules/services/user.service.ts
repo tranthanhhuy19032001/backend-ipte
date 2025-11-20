@@ -1,5 +1,6 @@
 import { UserDAO } from "@dao/user.dao";
 import { user } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 export class UserService {
     private userDao: UserDAO;
@@ -16,8 +17,21 @@ export class UserService {
         return this.userDao.findByEmail(email);
     }
 
-    async getAllUsers(): Promise<user[]> {
-        return this.userDao.findAll();
+    async getAllUsers(filters: {
+        username?: string;
+        email?: string;
+        fullName?: string;
+        isActive?: boolean;
+        page: number;
+        pageSize: number;
+    }): Promise<{
+        items: user[];
+        page: number;
+        page_size: number;
+        total: number;
+        total_pages: number;
+    }> {
+        return this.userDao.findAll(filters);
     }
 
     async registerUser(
@@ -26,16 +40,30 @@ export class UserService {
         email: string,
         roleId: number
     ): Promise<user> {
-        // 👉 Có thể hash password tại đây trước khi lưu
+        const passwordHash = bcrypt.hashSync(password, 10);
+
         return this.userDao.create({
             email,
-            password,
+            password: passwordHash,
             username,
-            roleId,
-            createdBy: "system",
-            updatedBy: "system",
+            created_by: "system",
+            updated_by: "system",
             version: 1,
-        } as any); // ép kiểu vì thiếu id, createdAt, updatedAt
+            user_role: {
+                create: [
+                    {
+                        created_by: "system",
+                        updated_by: "system",
+                        version: 1,
+                        role: {
+                            connect: {
+                                role_id: roleId,
+                            },
+                        },
+                    },
+                ],
+            },
+        });
     }
 
     async updateUser(id: number, data: Partial<user>): Promise<user> {

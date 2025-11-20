@@ -1,6 +1,7 @@
 import { TeacherDAO } from "../dao/teacher.dao";
 import { teacher } from "@prisma/client";
 import { AboutService } from "@services/about.service";
+import e from "express";
 
 type TeacherResponse = {
     features: {
@@ -85,9 +86,11 @@ export class TeacherService {
         return this.teacherDAO.findWithFilters(filters);
     }
 
-    async getTeacherDetail(id?: number): Promise<teacher | null> {
+    async getTeacherDetail(id?: number, slug?: string): Promise<teacher | null> {
         if (id !== undefined) {
             return this.teacherDAO.findById(id);
+        } else if (slug !== undefined) {
+            return this.teacherDAO.findBySlug(slug);
         } else {
             throw new Error("Either id or slug must be provided.");
         }

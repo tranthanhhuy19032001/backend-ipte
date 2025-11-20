@@ -10,7 +10,17 @@ export class UserController {
     // Lấy danh sách tất cả user
     async getAllUsers(req: Request, res: Response): Promise<void> {
         try {
-            const users = await userService.getAllUsers();
+            const page = Math.max(1, Number(req.query.page) || 1);
+            const pageSize = Math.max(1, Math.min(Number(req.query.page_size) || 20, 100));
+            const { username, email, fullName, isActive } = req.query;
+            const users = await userService.getAllUsers({
+                username: username as string | undefined,
+                email: email as string | undefined,
+                fullName: fullName as string | undefined,
+                isActive: isActive !== undefined ? Boolean(Number(isActive)) : undefined,
+                page,
+                pageSize,
+            });
             res.status(200).json(users);
         } catch (error: any) {
             res.status(500).json({

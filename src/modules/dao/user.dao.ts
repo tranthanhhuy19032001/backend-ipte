@@ -1,4 +1,4 @@
-import { user } from "@prisma/client";
+import { Prisma, user } from "@prisma/client";
 
 import prisma from "@config/database";
 
@@ -15,11 +15,63 @@ export class UserDAO {
         });
     }
 
-    async findAll(): Promise<user[]> {
-        return prisma.user.findMany();
+    async findAll({
+        username,
+        email,
+        fullName,
+        isActive,
+        page,
+        pageSize,
+    }: {
+        username?: string;
+        email?: string;
+        fullName?: string;
+        isActive?: boolean;
+        page: number;
+        pageSize: number;
+    }) {
+        const whereClause: any = {};
+
+        if (username) {
+            whereClause.username = {
+                contains: username,
+                mode: "insensitive",
+            };
+        }
+        if (email) {
+            whereClause.email = {
+                contains: email,
+                mode: "insensitive",
+            };
+        }
+        if (fullName) {
+            whereClause.full_name = {
+                contains: fullName,
+                mode: "insensitive",
+            };
+        }
+        if (isActive !== undefined) {
+            whereClause.is_active = isActive;
+        }
+
+        const total = await prisma.user.count({ where: whereClause });
+        const totalPages = Math.ceil(total / pageSize);
+        const items = await prisma.user.findMany({
+            where: whereClause,
+            skip: (page - 1) * pageSize,
+            take: pageSize,
+        });
+
+        return {
+            items,
+            page,
+            page_size: pageSize,
+            total,
+            total_pages: totalPages,
+        };
     }
 
-    async create(data: Omit<user, "id" | "createdAt" | "updatedAt">): Promise<user> {
+    async create(data: any): Promise<user> {
         return prisma.user.create({
             data,
         });

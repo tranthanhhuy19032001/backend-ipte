@@ -11,8 +11,9 @@ VALUES ('CREATE_POST', 'Tạo bài viết', 'system'),
        ('DELETE_POST', 'Xóa bài viết', 'system'),
        ('VIEW_POST', 'Xem bài viết', 'system');
 
+-- Mật khẩu mặc định là admin123 (đã mã hóa bcrypt cost=10)
 INSERT INTO "user" (username, password, email, full_name, created_by)
-VALUES ('admin', 'admin123', 'admin@ipte.edu.vn', 'Administrator', 'system');
+VALUES ('admin', '$2b$10$QvqOokoSoj2YD/LiK76ICOxaFEpbAKy.Dr3ezc2pp6y0hUuYnfo8e', 'admin@ipte.edu.vn', 'Administrator', 'system');
 
 INSERT INTO user_role (user_id, role_id, created_by)
 SELECT u.user_id, r.role_id, 'system'

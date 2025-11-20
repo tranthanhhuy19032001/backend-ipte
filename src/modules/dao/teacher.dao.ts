@@ -9,6 +9,12 @@ export class TeacherDAO {
         });
     }
 
+    async findBySlug(slug: string): Promise<teacher | null> {
+        return prisma.teacher.findFirst({
+            where: { slug: slug },
+        });
+    }
+
     async findAll(): Promise<teacher[]> {
         return prisma.teacher.findMany();
     }

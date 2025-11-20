@@ -28,13 +28,16 @@ export class TeacherController {
     }
 
     async getTeacherDetail(req: Request, res: Response): Promise<void> {
-        const { id } = req.query;
+        const { id, slug } = req.query;
         if (Number.isNaN(id)) {
             res.status(400).json({ message: "Invalid teacher_id." });
             return;
         }
         try {
-            const teacher = await teacherService.getTeacherDetail(id ? Number(id) : undefined);
+            const teacher = await teacherService.getTeacherDetail(
+                id ? Number(id) : undefined,
+                slug ? String(slug) : undefined
+            );
             if (!teacher) {
                 res.status(404).json({ message: "Teacher not found." });
                 return;

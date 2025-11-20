@@ -57,7 +57,7 @@ export class AuthService {
         if (!user) throw new Error("Invalid credentials");
 
         // 2) So sánh mật khẩu
-        const ok = await bcrypt.compare(password, user.password);
+        const ok = bcrypt.compareSync(password, user.password);
         if (!ok) throw new Error("Invalid credentials");
 
         // 3) Chuẩn bị claims
