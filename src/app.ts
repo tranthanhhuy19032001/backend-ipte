@@ -16,7 +16,11 @@ import categoryRoutes from "@routes/category.routes";
 
 const app: Express = express();
 
-const allowedOrigins = ["http://localhost:3000", "https://your-frontend.com"];
+const allowedOrigins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://your-frontend.com",
+];
 
 app.use(
     cors({
