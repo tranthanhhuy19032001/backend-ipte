@@ -1,5 +1,6 @@
 ﻿import express, { Express } from "express";
 import cors from "cors";
+import path from "path";
 
 import { setupSwagger } from "@config/swagger";
 import errorHandler from "@middlewares/errorHandler";
@@ -29,6 +30,9 @@ app.use(
     })
 );
 app.use(express.json());
+
+// Serve static files from storage directory
+app.use("/storage", express.static(path.join(process.cwd(), "storage")));
 
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);

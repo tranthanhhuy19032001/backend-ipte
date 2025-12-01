@@ -4,7 +4,9 @@ import { CourseService } from "@services/course.service";
 export class CourseController {
     async create(req: Request, res: Response) {
         try {
-            const created = await CourseService.createCourse(req.body);
+            // Loại bỏ course_id vì nó tự động tăng
+            const { course_id, courseId, ...data } = req.body;
+            const created = await CourseService.createCourse(data);
             res.status(201).json(created);
         } catch (e: any) {
             if (e?.message === "COURSE_CONFLICT") {

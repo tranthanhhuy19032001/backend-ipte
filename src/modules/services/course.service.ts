@@ -1,26 +1,31 @@
 import prisma from "@config/database";
 import { $Enums, Prisma } from "@prisma/client";
 import slugify from "slugify";
+import { saveBase64Image, deleteImage } from "@utils/imageHandler";
 
 export type CourseCreateDTO = {
-    course_code?: string | null;
-    course_name: string;
-    slug?: string | null;
-    title?: string | null;
-    description?: string | null;
-    level?: string;
-    mode?: string;
-    language?: string | null;
-    price?: number | null;
-    duration?: string | null;
-    start_date?: string | Date | null;
-    end_date?: string | Date | null;
-    image?: string | null;
-    created_by?: string | null;
-    version?: number | null;
-    schedule: string | null;
-    tuition: string | null;
+    title: string,
+    slug: string | null,
+    level: string | null,
+    category: string | null,
+    categoryId: number | null,
+    description: string | null,
+    isDisabled: boolean | null;
+    isFeatured: boolean | null;
+    image: string | null;
     content: string | null;
+    duration: string | null;
+    startDate: string | null;
+    endDate: string | null;
+    metaTitle: string | null;
+    metaDescription: string | null;
+    audience: Array<string> | [];
+    keywords: Array<string> | [];
+    schemaEnabled: boolean | null;
+    schemaMode: string | null;
+    schemaData: string | null;
+    benefits: string | null;
+    tuition: string | null;
 };
 
 export type CourseUpdateDTO = Partial<CourseCreateDTO>;
@@ -63,48 +68,62 @@ async function ensureUniqueSlug(base: string, courseIdToExclude?: number): Promi
 /** Chuẩn hóa data trước khi đưa vào Prisma */
 function normalizeCreateInput(input: CourseCreateDTO) {
     const data: Prisma.courseCreateInput = {
-        course_code: input.course_code ?? null,
-        course_name: input.course_name,
-        slug: input.slug ?? null,
-        title: input.title ?? null,
-        description: input.description ?? null,
-        level: (input.level as any) ?? $Enums.course_level.BEGINNER,
-        mode: (input.mode as any) ?? undefined,
-        language: input.language ?? "en",
-        price: input.price ?? 0,
-        duration: input.duration ?? null,
-        start_date: input.start_date ? new Date(input.start_date) : null,
-        end_date: input.end_date ? new Date(input.end_date) : null,
-        image: input.image ?? null,
-        created_by: input.created_by ?? null,
-        version: input.version ?? 1,
-        schedule: input.schedule,
-        tuition: input.tuition,
-        content: input.content,
+        course_name: input.title,
+        slug: input.slug!,
+        title: input.title,
+        ...(input.description && { description: input.description }),
+        ...(input.level && { level: input.level as any }),
+        ...(input.category && { category: input.category as any }),
+        ...(input.categoryId && { category_id: input.categoryId }),
+        is_disabled: input.isDisabled ?? false,
+        is_featured: input.isFeatured ?? false,
+        ...(input.image && { image: input.image }),
+        ...(input.content && { content: input.content }),
+        ...(input.duration && { duration: input.duration }),
+        ...(input.startDate && { start_date: new Date(input.startDate) }),
+        ...(input.endDate && { end_date: new Date(input.endDate) }),
+        ...(input.metaTitle && { meta_title: input.metaTitle }),
+        ...(input.metaDescription && { meta_description: input.metaDescription }),
+        ...(input.audience && input.audience.length > 0 && { audience: input.audience }),
+        ...(input.keywords && input.keywords.length > 0 && { keywords: input.keywords }),
+        ...(input.schemaEnabled !== undefined && { schema_enabled: input.schemaEnabled }),
+        ...(input.schemaMode && { schema_mode: input.schemaMode }),
+        ...(input.schemaData && { schema_data: input.schemaData }),
+        ...(input.benefits && { benefits: input.benefits }),
+        ...(input.tuition && { tuition: input.tuition }),
+        created_by: "system",
+        updated_by: "system",
+        version: 1,
     };
     return data;
 }
 
 function normalizeUpdateInput(input: CourseUpdateDTO) {
     const data: Prisma.courseUpdateInput = {
-        course_code: input.course_code ?? undefined,
-        course_name: input.course_name ?? undefined,
-        slug: input.slug ?? undefined,
-        title: input.title ?? undefined,
-        description: input.description ?? undefined,
-        level: (input.level as any) ?? undefined,
-        mode: (input.mode as any) ?? undefined,
-        language: input.language ?? undefined,
-        price: input.price ?? undefined,
-        duration: input.duration ?? undefined,
-        start_date: input.start_date ? new Date(input.start_date) : undefined,
-        end_date: input.end_date ? new Date(input.end_date) : undefined,
-        image: input.image ?? undefined,
-        updated_by: input.created_by ?? undefined,
-        version: input.version ?? undefined,
-        schedule: input.schedule ?? undefined,
-        tuition: input.tuition ?? undefined,
-        content: input.content ?? undefined,
+        ...(input.title && { course_name: input.title, title: input.title }),
+        ...(input.description && { description: input.description }),
+        ...(input.level && { level: input.level as any }),
+        ...(input.category && { category: input.category as any }),
+        ...(input.categoryId && { category_id: input.categoryId }),
+        ...(input.isDisabled !== undefined && { is_disabled: input.isDisabled }),
+        ...(input.isFeatured !== undefined && { is_featured: input.isFeatured }),
+        ...(input.image && { image: input.image }),
+        ...(input.content && { content: input.content }),
+        ...(input.duration && { duration: input.duration }),
+        ...(input.startDate && { start_date: new Date(input.startDate) }),
+        ...(input.endDate && { end_date: new Date(input.endDate) }),
+        ...(input.metaTitle && { meta_title: input.metaTitle }),
+        ...(input.metaDescription && { meta_description: input.metaDescription }),
+        ...(input.audience && input.audience.length > 0 && { audience: input.audience }),
+        ...(input.keywords && input.keywords.length > 0 && { keywords: input.keywords }),
+        ...(input.schemaEnabled !== undefined && { schema_enabled: input.schemaEnabled }),
+        ...(input.schemaMode && { schema_mode: input.schemaMode }),
+        ...(input.schemaData && { schema_data: input.schemaData }),
+        ...(input.benefits && { benefits: input.benefits }),
+        ...(input.tuition && { tuition: input.tuition }),
+        updated_at: new Date(),
+        updated_by: "system",
+        version: { increment: 1 },
     };
     return data;
 }
@@ -112,24 +131,49 @@ function normalizeUpdateInput(input: CourseUpdateDTO) {
 export class CourseService {
     static async createCourse(input: CourseCreateDTO) {
         // đảm bảo slug
-        const desiredSlug = input.slug || input.course_name;
+        const desiredSlug = input.slug || input.title;
         const uniqueSlug = await ensureUniqueSlug(desiredSlug!);
 
-        const data = normalizeCreateInput({ ...input, slug: uniqueSlug });
+        // Process image: decode base64 and save to storage
+        let imagePath: string | null = null;
+        const image = input.image || null;
+        if (image !== null && image.startsWith("data:image")) {
+            try {
+                imagePath = await saveBase64Image(image);
+            } catch (e: any) {
+                console.error("Error processing image:", e.message);
+                throw new Error(`IMAGE_PROCESS_ERROR: ${e.message}`);
+            }
+        } else if (image !== null) {
+            // If it's already a path, keep it
+            imagePath = image;
+        }
+
+        const data = normalizeCreateInput({ ...input, slug: uniqueSlug, image: imagePath });
 
         try {
+            console.log("Creating course with data:", JSON.stringify(data, null, 2));
             const created = await prisma.course.create({ data });
             return created;
         } catch (e: any) {
+            // If error occurs, delete the saved image
+            if (imagePath) {
+                deleteImage(imagePath);
+            }
+            console.error("Error creating course:", {
+                code: e?.code,
+                message: e?.message,
+                meta: e?.meta,
+                data: data
+            });
             if (e?.code === "P2002") {
                 // unique violation (course_code or slug)
-                throw new Error("COURSE_CONFLICT"); // controller sẽ map 409
+                const field = e?.meta?.target?.[0] || "unknown";
+                throw new Error(`COURSE_CONFLICT_${field}`);
             }
             throw e;
         }
-    }
-
-    static async getCourseById(courseId: number) {
+    }    static async getCourseById(courseId: number) {
         const found = await prisma.course.findUnique({
             where: { course_id: courseId },
         });
@@ -256,10 +300,31 @@ export class CourseService {
         // nếu đổi tên hoặc đổi slug thì cần đảm bảo slug unique
         let data = normalizeUpdateInput(input);
 
-        if (input.slug || input.course_name) {
-            const base = input.slug || input.course_name!;
+        if (input.slug || input.title) {
+            const base = input.slug || input.title!;
             const uniqueSlug = await ensureUniqueSlug(base, courseId);
             data.slug = uniqueSlug;
+        }
+
+        // Process image if provided
+        if (input.image && input.image.startsWith("data:image")) {
+            try {
+                const imagePath = await saveBase64Image(input.image);
+                
+                // Delete old image if exists
+                const oldCourse = await prisma.course.findUnique({
+                    where: { course_id: courseId },
+                    select: { image: true }
+                });
+                if (oldCourse?.image) {
+                    deleteImage(oldCourse.image);
+                }
+                
+                data.image = imagePath;
+            } catch (e: any) {
+                console.error("Error processing image:", e.message);
+                throw new Error(`IMAGE_PROCESS_ERROR: ${e.message}`);
+            }
         }
 
         try {
@@ -277,6 +342,17 @@ export class CourseService {
 
     static async deleteCourse(courseId: number) {
         try {
+            // Get course to delete its image
+            const course = await prisma.course.findUnique({
+                where: { course_id: courseId },
+                select: { image: true }
+            });
+
+            // Delete image file if exists
+            if (course?.image) {
+                deleteImage(course.image);
+            }
+
             await prisma.course.delete({ where: { course_id: courseId } });
         } catch (e: any) {
             if (e?.code === "P2025") throw new Error("COURSE_NOT_FOUND");
