@@ -6,6 +6,7 @@ services:
       plan: free
       buildCommand: |
           npm ci --include=dev
+          npx prisma db pull
           npx prisma generate
           npx prisma migrate deploy
           npm run build
