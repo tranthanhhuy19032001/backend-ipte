@@ -14,6 +14,7 @@ import newsRoutes from "@routes/news.routes";
 import consultationRoutes from "@routes/consultation.routes";
 import knowledgeRoutes from "@routes/knowledge.routes";
 import categoryRoutes from "@routes/category.routes";
+import geminiRoutes from "@routes/gemini.routers";
 
 const app: Express = express();
 
@@ -43,7 +44,7 @@ app.use("/api/news", newsRoutes);
 app.use("/api/consultations", consultationRoutes);
 app.use("/api/knowledges", knowledgeRoutes);
 app.use("/api/categories", categoryRoutes);
-
+app.use("/api/gemini", geminiRoutes);
 app.use(errorHandler);
 
 app.get("/", (_req, res) => {

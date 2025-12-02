@@ -2,33 +2,9 @@ import prisma from "@config/database";
 import { $Enums, Prisma } from "@prisma/client";
 import slugify from "slugify";
 import { saveBase64Image, deleteImage } from "@utils/imageHandler";
+import { SeoEvaluationInput } from "@dto/SeoEvaluationInput";
 
-export type CourseCreateDTO = {
-    title: string,
-    slug: string | null,
-    level: string | null,
-    category: string | null,
-    categoryId: number | null,
-    description: string | null,
-    isDisabled: boolean | null;
-    isFeatured: boolean | null;
-    image: string | null;
-    content: string | null;
-    duration: string | null;
-    startDate: string | null;
-    endDate: string | null;
-    metaTitle: string | null;
-    metaDescription: string | null;
-    audience: Array<string> | [];
-    keywords: Array<string> | [];
-    schemaEnabled: boolean | null;
-    schemaMode: string | null;
-    schemaData: string | null;
-    benefits: string | null;
-    tuition: string | null;
-};
-
-export type CourseUpdateDTO = Partial<CourseCreateDTO>;
+export type CourseUpdateDTO = Partial<SeoEvaluationInput>;
 
 export type CourseListQuery = {
     q?: string; // search
@@ -66,7 +42,7 @@ async function ensureUniqueSlug(base: string, courseIdToExclude?: number): Promi
 }
 
 /** Chuẩn hóa data trước khi đưa vào Prisma */
-function normalizeCreateInput(input: CourseCreateDTO) {
+function normalizeCreateInput(input: SeoEvaluationInput) {
     const data: Prisma.courseCreateInput = {
         course_name: input.title,
         slug: input.slug!,
@@ -129,7 +105,7 @@ function normalizeUpdateInput(input: CourseUpdateDTO) {
 }
 
 export class CourseService {
-    static async createCourse(input: CourseCreateDTO) {
+    static async createCourse(input: SeoEvaluationInput) {
         // đảm bảo slug
         const desiredSlug = input.slug || input.title;
         const uniqueSlug = await ensureUniqueSlug(desiredSlug!);
@@ -178,6 +154,8 @@ export class CourseService {
             where: { course_id: courseId },
         });
         if (!found) throw new Error("COURSE_NOT_FOUND");
+
+        found.image = found.image ? "http://localhost:4000/" + found.image : null;
         return found;
     }
 
@@ -286,6 +264,11 @@ export class CourseService {
             prisma.course.findMany({ where, orderBy, skip, take }),
             prisma.course.count({ where }),
         ]);
+
+        items.forEach((item) => {
+            // Convert Date objects to ISO strings
+            item.image = item.image ? "http://localhost:4000/" + item.image : null;
+        });
 
         return {
             items,

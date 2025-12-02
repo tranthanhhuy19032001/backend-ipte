@@ -20,7 +20,8 @@
             "@models/*": ["modules/models/*"],
             "@middlewares/*": ["middlewares/*"],
             "@config/*": ["config/*"],
-            "@enums/*": ["enums/*"]
+            "@enums/*": ["enums/*"],
+            "@dto/*": ["modules/dto/*"]
         },
         "typeRoots": ["./node_modules/@types", "./src/types"]
     }

@@ -1,0 +1,24 @@
+export interface SeoEvaluationInput {
+    title: string,
+    slug: string | null,
+    level: string | null,
+    category: string | null,
+    categoryId: number | null,
+    description: string | null,
+    isDisabled: boolean | null;
+    isFeatured: boolean | null;
+    image: string | null;
+    content: string | null;
+    duration: string | null;
+    startDate: string | null;
+    endDate: string | null;
+    metaTitle: string | null;
+    metaDescription: string | null;
+    audience: Array<string> | [];
+    keywords: Array<string> | [];
+    schemaEnabled: boolean | null;
+    schemaMode: string | null;
+    schemaData: string | null;
+    benefits: string | null;
+    tuition: string | null;
+}
