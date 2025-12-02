@@ -34,7 +34,7 @@ export class CourseController {
     async list(req: Request, res: Response) {
         try {
             const {
-                q,
+                search: q,
                 courseName,
                 slug,
                 title,

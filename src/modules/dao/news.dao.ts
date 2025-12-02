@@ -62,6 +62,7 @@ export class NewsDAO {
     }
 
     async findAllNews(filters: {
+        search?: string;
         title?: string;
         slug?: string;
         description?: string;
@@ -79,6 +80,7 @@ export class NewsDAO {
         total_pages: number;
     }> {
         const {
+            search,
             title,
             slug,
             description,
@@ -92,6 +94,13 @@ export class NewsDAO {
         const skip = (page - 1) * pageSize;
         const take = pageSize;
         const whereClause: any = {};
+        if (search) {
+            whereClause.OR = [
+                { title: { contains: search, mode: "insensitive" } },
+                { description: { contains: search, mode: "insensitive" } },
+                { slug: { contains: search, mode: "insensitive" } },
+            ];
+        }
         if (title) {
             whereClause.title = {
                 contains: title,

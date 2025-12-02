@@ -85,6 +85,7 @@ export class NewsService {
     }
 
     async getAllNews(filters: {
+        search?: string;
         title?: string;
         description?: string;
         slug?: string;
