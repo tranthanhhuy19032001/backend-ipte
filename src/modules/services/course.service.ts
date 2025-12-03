@@ -350,12 +350,17 @@ export class CourseService {
     }
 
     static async getCourseDetail(id?: number, slug?: string) {
+        let course;
         if (id !== undefined) {
-            return this.getCourseById(id);
+            course = await this.getCourseById(id);
         } else if (slug !== undefined) {
-            return this.getCourseBySlug(slug);
+            course = await this.getCourseBySlug(slug);
         } else {
             throw new Error("Either id or slug must be provided.");
         }
+        if (course.image) {
+            course.image = "http://localhost:4000" + course.image;
+        }
+        return course;
     }
 }

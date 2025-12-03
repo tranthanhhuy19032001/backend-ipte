@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { NewsService } from "@services/news.service";
+import { camelCaseKeysDeep } from "@utils/response";
 
 const newsService = new NewsService();
 
@@ -7,7 +8,7 @@ export class NewsController {
     async getNewsAndTips(req: Request, res: Response): Promise<void> {
         try {
             const news = await newsService.getNewsAndTips();
-            res.status(200).json(news);
+            res.status(200).json(camelCaseKeysDeep(news));
         } catch (error: any) {
             res.status(500).json({
                 message: "Failed to fetch users",
@@ -35,7 +36,7 @@ export class NewsController {
                 page,
                 pageSize,
             });
-            res.status(200).json(news);
+            res.status(200).json(camelCaseKeysDeep(news));
         } catch (error: any) {
             res.status(500).json({
                 message: "Failed to fetch news",
@@ -51,7 +52,7 @@ export class NewsController {
                 id ? Number(id) : undefined,
                 slug ? String(slug) : undefined
             );
-            res.status(200).json(newsDetail);
+            res.status(200).json(camelCaseKeysDeep(newsDetail));
         } catch (error: any) {
             if (error?.message === "NEWS_NOT_FOUND") {
                 res.status(404).json({ message: "News not found." });
