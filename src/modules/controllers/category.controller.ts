@@ -33,6 +33,6 @@ export class CategoryController {
             urlOrSlug as string | undefined,
             categoryType as string | undefined
         );
-        res.json(categoryTree);
+        res.json(camelCaseKeysDeep(categoryTree));
     }
 }
