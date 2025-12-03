@@ -46,6 +46,10 @@ model comment {
   created_by        String?    @db.VarChar(50)
   updated_by        String?    @db.VarChar(50)
   version           Int?       @default(1)
+  rating            Int?
+  likes             Int?       @default(0)
+  user_name         String?    @db.VarChar(100)
+  user_avatar       String?    @db.VarChar(255)
   course            course?    @relation(fields: [course_id], references: [course_id], onDelete: Cascade, onUpdate: NoAction)
   knowledge         knowledge? @relation(fields: [knowledge_id], references: [knowledge_id], onDelete: Cascade, onUpdate: NoAction)
   comment           comment?   @relation("commentTocomment", fields: [parent_comment_id], references: [comment_id], onDelete: Cascade, onUpdate: NoAction)
