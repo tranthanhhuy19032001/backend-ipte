@@ -64,4 +64,79 @@ export class NewsController {
             });
         }
     }
+
+    async createNews(req: Request, res: Response): Promise<void> {
+        try {
+            const { news_id, newsId, ...data } = req.body;
+            const news = await newsService.createNews(data);
+            res.status(201).json(camelCaseKeysDeep(news));
+        } catch (error: any) {
+            res.status(500).json({
+                message: "Failed to create news",
+                error: error.message,
+            });
+        }
+    }
+
+    async getNewsById(req: Request, res: Response): Promise<void> {
+        const id = Number(req.params.id);
+        if (Number.isNaN(id)) {
+            res.status(400).json({ message: "Invalid news ID." });
+            return;
+        }
+        try {
+            const news = await newsService.getNewsById(id);
+            res.status(200).json(camelCaseKeysDeep(news));
+        } catch (error: any) {
+            if (error?.message === "NEWS_NOT_FOUND") {
+                res.status(404).json({ message: "News not found." });
+                return;
+            }
+            res.status(500).json({
+                message: "Failed to fetch news",
+                error: error.message,
+            });
+        }
+    }
+    async updateNews(req: Request, res: Response): Promise<void> {
+        const id = Number(req.params.id);
+        if (Number.isNaN(id)) {
+            res.status(400).json({ message: "Invalid news ID." });
+            return;
+        }
+        try {
+            const news = await newsService.updateNews(id, req.body);
+            res.status(200).json(camelCaseKeysDeep(news));
+        } catch (error: any) {
+            if (error?.message === "NEWS_NOT_FOUND") {
+                res.status(404).json({ message: "News not found." });
+                return;
+            }
+            res.status(500).json({
+                message: "Failed to update news",
+                error: error.message,
+            });
+        }
+    }
+
+    async deleteNews(req: Request, res: Response): Promise<void> {
+        const id = Number(req.params.id);
+        if (Number.isNaN(id)) {
+            res.status(400).json({ message: "Invalid news ID." });
+            return;
+        }
+        try {
+            await newsService.deleteNews(id);
+            res.status(204).end();
+        } catch (error: any) {
+            if (error?.message === "NEWS_NOT_FOUND") {
+                res.status(404).json({ message: "News not found." });
+                return;
+            }
+            res.status(500).json({
+                message: "Failed to delete news",
+                error: error.message,
+            });
+        }
+    }
 }

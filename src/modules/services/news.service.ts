@@ -1,6 +1,11 @@
 import { NewsDAO } from "@dao/news.dao";
 import { KnowledgeDAO } from "@dao/knowledge.dao";
 import { news } from "@prisma/client";
+import slugify from "slugify";
+import prisma from "@config/database";
+import { SeoEvaluationInput } from "@dto/SeoEvaluationInput";
+import { $Enums, Prisma } from "@prisma/client";
+import { saveBase64Image, deleteImage } from "@utils/imageHandler";
 
 type newsJoinedKnowledge = {
     news: {
@@ -45,7 +50,7 @@ export class NewsService {
         this.knowledgeDAO = new KnowledgeDAO();
     }
 
-    async getUserById(id: number): Promise<news | null> {
+    async getNewsById(id: number): Promise<news | null> {
         return this.newsDAO.findById(id);
     }
 
@@ -56,32 +61,6 @@ export class NewsService {
         const newsResult = await news;
         const tipsResult = await tips;
         return { news: newsResult, tips: tipsResult };
-    }
-
-    async registerUser(
-        username: string,
-        password: string,
-        email: string,
-        roleId: number
-    ): Promise<news> {
-        // 👉 Có thể hash password tại đây trước khi lưu
-        return this.newsDAO.create({
-            email,
-            password,
-            username,
-            roleId,
-            createdBy: "system",
-            updatedBy: "system",
-            version: 1,
-        } as any); // ép kiểu vì thiếu id, createdAt, updatedAt
-    }
-
-    async updateUser(id: number, data: Partial<news>): Promise<news> {
-        return this.newsDAO.update(id, data);
-    }
-
-    async deleteUser(id: number): Promise<news> {
-        return this.newsDAO.delete(id);
     }
 
     async getAllNews(filters: {
@@ -100,12 +79,120 @@ export class NewsService {
     }
 
     async getNewsDetail(id?: number, slug?: string): Promise<news | null> {
+        let found: news | null = null;
         if (id !== undefined) {
-            return this.newsDAO.findById(id);
+            found = await this.newsDAO.findById(id);
         } else if (slug !== undefined) {
-            return this.newsDAO.findBySlug(slug);
+            found = await this.newsDAO.findBySlug(slug);
         } else {
             throw new Error("Either id or slug must be provided.");
         }
+        if (found && found.image) {
+            found.image = "http://localhost:4000" + found.image;
+        }
+        return found;
+    }
+
+    async createNews(input: SeoEvaluationInput) {
+        // đảm bảo slug
+        const desiredSlug = input.slug || input.title;
+        const uniqueSlug = await ensureUniqueSlug(desiredSlug!);
+
+        // Process image: decode base64 and save to storage
+        let imagePath: string | null = null;
+        const image = input.image || null;
+        if (image !== null && image.startsWith("data:image")) {
+            try {
+                imagePath = await saveBase64Image(image);
+            } catch (e: any) {
+                console.error("Error processing image:", e.message);
+                throw new Error(`IMAGE_PROCESS_ERROR: ${e.message}`);
+            }
+        } else if (image !== null) {
+            // If it's already a path, keep it
+            imagePath = image;
+        }
+
+        const data = normalizeCreateInput({ ...input, slug: uniqueSlug, image: imagePath });
+
+        try {
+            console.log("Creating course with data:", JSON.stringify(data, null, 2));
+            const created = await prisma.news.create({ data });
+            return created;
+        } catch (e: any) {
+            // If error occurs, delete the saved image
+            if (imagePath) {
+                deleteImage(imagePath);
+            }
+            console.error("Error creating course:", {
+                code: e?.code,
+                message: e?.message,
+                meta: e?.meta,
+                data: data
+            });
+            if (e?.code === "P2002") {
+                // unique violation (course_code or slug)
+                const field = e?.meta?.target?.[0] || "unknown";
+                throw new Error(`COURSE_CONFLICT_${field}`);
+            }
+            throw e;
+        }
+    }
+
+    async updateNews(id: number, data: Partial<news>): Promise<news> {
+        return this.newsDAO.update(id, data);
+    }
+
+    async deleteNews(id: number): Promise<news> {
+        return this.newsDAO.delete(id);
+    }
+}
+
+/** Chuẩn hóa data trước khi đưa vào Prisma */
+function normalizeCreateInput(input: SeoEvaluationInput) {
+    const data: Prisma.newsCreateInput = {
+        slug: input.slug!,
+        title: input.title,
+        content: input.content!,
+        ...(input.description && { description: input.description }),
+        ...(input.level && { level: input.level as any }),
+        ...(input.category && { category: input.category as any }),
+        ...(input.categoryId && { category_id: input.categoryId }),
+        ...(input.image && { image: input.image }),
+        ...(input.content && { content: input.content }),
+        ...(input.duration && { duration: input.duration }),
+        // ...(input.startDate && { start_date: new Date(input.startDate) }),
+        // ...(input.endDate && { end_date: new Date(input.endDate) }),
+        ...(input.metaTitle && { meta_title: input.metaTitle }),
+        ...(input.metaDescription && { meta_description: input.metaDescription }),
+        ...(input.audience && input.audience.length > 0 && { audience: input.audience }),
+        ...(input.keywords && input.keywords.length > 0 && { keywords: input.keywords }),
+        ...(input.schemaEnabled !== undefined && { schema_enabled: input.schemaEnabled }),
+        ...(input.schemaMode && { schema_mode: input.schemaMode }),
+        ...(input.schemaData && { schema_data: input.schemaData }),
+        ...(input.benefits && { benefits: input.benefits }),
+        ...(input.tuition && { tuition: input.tuition }),
+        created_by: "system",
+        updated_by: "system",
+        version: 1,
+    };
+    return data;
+}
+
+async function ensureUniqueSlug(base: string, newsIdToExclude?: number): Promise<string> {
+    const baseSlug = slugify(base, { lower: true, strict: true, trim: true }) || "news";
+    let candidate = baseSlug;
+    let i = 1;
+    while (true) {
+        const found = await prisma.news.findFirst({
+            where: {
+                slug: candidate,
+                ...(newsIdToExclude ? { news_id: { not: newsIdToExclude } } : {}),
+            },
+            select: { news_id: true },
+        });
+        if (!found) return candidate;
+        i += 1;
+        candidate = `${baseSlug}-${i}`;
     }
 }

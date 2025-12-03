@@ -149,7 +149,8 @@ export class CourseService {
             }
             throw e;
         }
-    }    static async getCourseById(courseId: number) {
+    }    
+    static async getCourseById(courseId: number) {
         const found = await prisma.course.findUnique({
             where: { course_id: courseId },
         });

@@ -137,6 +137,7 @@ model course {
   schema_mode          String?                @db.VarChar(50)
   schema_data          String?
   benefits             String?
+  seo_score            Int?
   comment              comment[]
   commitment           commitment[]
   consultation_request consultation_request[]
@@ -197,26 +198,35 @@ model knowledge {
 }
 
 model news {
-  news_id       Int            @id @default(autoincrement())
-  author_id     Int?
-  category_id   Int?
-  image         String?
-  title         String         @db.VarChar(255)
-  slug          String         @unique @db.VarChar(255)
-  description   String?
-  content       String
-  status        publish_status @default(DRAFT)
-  published_at  DateTime?      @db.Timestamp(6)
-  tag_ids       Int[]
-  keywords      String[]       @default([])
-  created_at    DateTime?      @default(now()) @db.Timestamp(6)
-  updated_at    DateTime?      @default(now()) @db.Timestamp(6)
-  created_by    String?        @db.VarChar(50)
-  updated_by    String?        @db.VarChar(50)
-  version       Int?           @default(1)
-  is_prominent  Boolean?       @default(false)
-  category_type String?        @db.VarChar(255)
-  user          user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
+  news_id          Int            @id @default(autoincrement())
+  author_id        Int?
+  category_id      Int?
+  image            String?
+  title            String         @db.VarChar(255)
+  slug             String         @unique @db.VarChar(255)
+  description      String?
+  content          String
+  status           publish_status @default(DRAFT)
+  published_at     DateTime?      @db.Timestamp(6)
+  tag_ids          Int[]
+  keywords         String[]       @default([])
+  created_at       DateTime?      @default(now()) @db.Timestamp(6)
+  updated_at       DateTime?      @default(now()) @db.Timestamp(6)
+  created_by       String?        @db.VarChar(50)
+  updated_by       String?        @db.VarChar(50)
+  version          Int?           @default(1)
+  is_prominent     Boolean?       @default(false)
+  category_type    String?        @db.VarChar(255)
+  is_featured      Boolean?       @default(false)
+  is_disabled      Boolean?       @default(false)
+  meta_title       String?
+  meta_description String?
+  audience         String[]       @default([])
+  schema_enabled   Boolean?       @default(false)
+  schema_mode      String?        @db.VarChar(50)
+  schema_data      String?
+  seo_score        Int?
+  user             user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
 }
 
 model permission {

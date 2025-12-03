@@ -1,4 +1,5 @@
 export interface SeoEvaluationInput {
+    author: number | null,
     title: string,
     slug: string | null,
     level: string | null,
@@ -16,6 +17,7 @@ export interface SeoEvaluationInput {
     metaDescription: string | null;
     audience: Array<string> | [];
     keywords: Array<string> | [];
+    tags: Array<string> | [];
     schemaEnabled: boolean | null;
     schemaMode: string | null;
     schemaData: string | null;
