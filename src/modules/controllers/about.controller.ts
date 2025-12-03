@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import { AboutService } from "@services/about.service";
+import { camelCaseKeysDeep } from "@utils/response";
 
 export class AboutController {
     async create(req: Request, res: Response) {
         try {
             const created = await AboutService.create(req.body);
-            res.status(201).json(created);
+            res.status(201).json(camelCaseKeysDeep(created));
         } catch (e) {
             res.status(500).json({ message: "Failed to create about." });
         }
@@ -16,7 +17,7 @@ export class AboutController {
         if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid about_id." });
         try {
             const data = await AboutService.getById(id);
-            res.json(data);
+            res.json(camelCaseKeysDeep(data));
         } catch (e: any) {
             if (e?.message === "ABOUT_NOT_FOUND")
                 return res.status(404).json({ message: "About not found." });
@@ -34,7 +35,7 @@ export class AboutController {
                 page_size: page_size ? Number(page_size) : undefined,
                 about_id: about_id ? Number(about_id) : undefined,
             });
-            res.json(result);
+            res.json(camelCaseKeysDeep(result));
         } catch {
             res.status(500).json({ message: "Failed to list about." });
         }
@@ -45,7 +46,7 @@ export class AboutController {
         if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid about_id." });
         try {
             const updated = await AboutService.update(id, req.body);
-            res.json(updated);
+            res.json(camelCaseKeysDeep(updated));
         } catch (e: any) {
             if (e?.message === "ABOUT_NOT_FOUND")
                 return res.status(404).json({ message: "About not found." });

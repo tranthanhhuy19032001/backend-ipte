@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { TeacherService } from "@services/teacher.service";
+import { camelCaseKeysDeep } from "@utils/response";
 
 const teacherService = new TeacherService();
 
@@ -18,7 +19,7 @@ export class TeacherController {
                 page,
                 pageSize,
             });
-            res.status(200).json(teachers);
+            res.status(200).json(camelCaseKeysDeep(teachers));
         } catch (error: any) {
             res.status(500).json({
                 message: "Failed to fetch users",
@@ -42,7 +43,7 @@ export class TeacherController {
                 res.status(404).json({ message: "Teacher not found." });
                 return;
             }
-            res.status(200).json(teacher);
+            res.status(200).json(camelCaseKeysDeep(teacher));
         } catch (error: any) {
             res.status(500).json({
                 message: "Failed to fetch teacher",

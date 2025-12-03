@@ -1,6 +1,6 @@
 import { CategoryService } from "@services/category.service";
 import { Request, Response } from "express";
-import { url } from "inspector";
+import { camelCaseKeysDeep } from "@utils/response";
 
 export class CategoryController {
     private categoryService: CategoryService;
@@ -18,12 +18,12 @@ export class CategoryController {
             page: page ? Number(page) : undefined,
             pageSize: pageSize ? Number(pageSize) : undefined,
         });
-        res.json(categories);
+        res.json(camelCaseKeysDeep(categories));
     }
 
     async getHeaderMenu(req: Request, res: Response) {
         const menu = await this.categoryService.getHeaderMenu();
-        res.json(menu);
+        res.json(camelCaseKeysDeep(menu));
     }
 
     async getCategoryTree(req: Request, res: Response) {

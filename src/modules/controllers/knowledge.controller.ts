@@ -1,4 +1,5 @@
 import { KnowledgeService } from "@services/knowledge.service";
+import { camelCaseKeysDeep } from "@utils/response";
 
 export class KnowledgeController {
     private knowledgeService: KnowledgeService;
@@ -16,7 +17,7 @@ export class KnowledgeController {
                 page,
                 pageSize,
             });
-            res.status(200).json(knowledges);
+            res.status(200).json(camelCaseKeysDeep(knowledges));
         } catch (error) {
             res.status(500).json({
                 message: "Failed to fetch knowledges by category id.",
@@ -42,7 +43,7 @@ export class KnowledgeController {
                 page,
                 pageSize,
             });
-            res.status(200).json(knowledges);
+            res.status(200).json(camelCaseKeysDeep(knowledges));
         } catch (error) {
             res.status(500).json({
                 message: "Failed to fetch knowledge list.",
@@ -57,7 +58,7 @@ export class KnowledgeController {
                 id ? Number(id) : undefined,
                 slug ? String(slug) : undefined
             );
-            res.status(200).json(knowledge);
+            res.status(200).json(camelCaseKeysDeep(knowledge));
         } catch (error) {
             res.status(500).json({ message: "Failed to fetch knowledge." });
         }

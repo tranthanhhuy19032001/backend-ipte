@@ -3,6 +3,7 @@ import { UserService } from "@services/user.service";
 import { ParamsDictionary } from "express-serve-static-core";
 import { ParsedQs } from "qs";
 import { getUserIdFromRequest } from "@utils/jwt";
+import { camelCaseKeysDeep } from "@utils/response";
 
 const userService = new UserService();
 
@@ -21,7 +22,7 @@ export class UserController {
                 page,
                 pageSize,
             });
-            res.status(200).json(users);
+            res.status(200).json(camelCaseKeysDeep(users));
         } catch (error: any) {
             res.status(500).json({
                 message: "Failed to fetch users",
@@ -39,7 +40,8 @@ export class UserController {
                 res.status(404).json({ message: "User not found" });
                 return;
             }
-            res.status(200).json(user);
+            const { password, ...userWithoutPassword } = user; 
+            res.status(200).json(camelCaseKeysDeep(userWithoutPassword));
         } catch (error: any) {
             res.status(500).json({
                 message: "Failed to fetch user",
@@ -53,7 +55,7 @@ export class UserController {
         try {
             const { username, email, password, roleId } = req.body;
             const newUser = await userService.registerUser(username, email, password, roleId);
-            res.status(201).json(newUser);
+            res.status(201).json(camelCaseKeysDeep(newUser));
         } catch (error: any) {
             res.status(500).json({
                 message: "Failed to create user",
@@ -79,7 +81,7 @@ export class UserController {
                 return;
             }
 
-            res.status(200).json(updatedUser);
+            res.status(200).json(camelCaseKeysDeep(updatedUser));
         } catch (error: any) {
             res.status(500).json({
                 message: "Failed to update user",
@@ -120,7 +122,8 @@ export class UserController {
                 res.status(404).json({ message: "User not found" });
                 return;
             }
-            res.status(200).json(user);
+            const { password, ...userWithoutPassword } = user; 
+            res.status(200).json(camelCaseKeysDeep(userWithoutPassword));
         } catch (error: any) {
             res.status(500).json({
                 message: "Failed to fetch user",
