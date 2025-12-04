@@ -40,7 +40,7 @@ app.use("/storage", express.static(path.join(process.cwd(), "storage")));
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
-app.use("/api/about", aboutRoutes);
+app.use("/api/abouts", aboutRoutes);
 app.use("/api/teachers", teacherRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/news", newsRoutes);

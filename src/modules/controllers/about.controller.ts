@@ -66,4 +66,18 @@ export class AboutController {
             res.status(500).json({ message: "Failed to delete about." });
         }
     }
+
+    async getDetail(req: Request, res: Response) {
+        const { slug } = req.query;
+        if (!slug || typeof slug !== "string") {
+            return res.status(400).json({ message: "Slug is required." });
+        }
+        try {
+            const found = await AboutService.getBySlug(slug);
+            if (!found) return res.status(404).json({ message: "About not found." });
+            res.json(camelCaseKeysDeep(found));
+        } catch {
+            res.status(500).json({ message: "Failed to get about detail." });
+        }
+    }
 }
