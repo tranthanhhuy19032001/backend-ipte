@@ -4,8 +4,10 @@ import { news } from "@prisma/client";
 import slugify from "slugify";
 import prisma from "@config/database";
 import { SeoEvaluationInput } from "@dto/SeoEvaluationInput";
-import { $Enums, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { saveBase64Image, deleteImage } from "@utils/imageHandler";
+import { config } from "@config/index";
+import { normalizeUrl } from "@utils/objectUtils";
 
 type newsJoinedKnowledge = {
     news: {
@@ -88,7 +90,7 @@ export class NewsService {
             throw new Error("Either id or slug must be provided.");
         }
         if (found && found.image) {
-            found.image = "http://localhost:4000" + found.image;
+            found.image = normalizeUrl(config.domain + "/" + found.image);
         }
         return found;
     }

@@ -3,6 +3,8 @@ import { $Enums, Prisma } from "@prisma/client";
 import slugify from "slugify";
 import { saveBase64Image, deleteImage } from "@utils/imageHandler";
 import { SeoEvaluationInput } from "@dto/SeoEvaluationInput";
+import { config } from "@config/index";
+import { normalizeUrl } from "@utils/objectUtils";
 
 export type CourseUpdateDTO = Partial<SeoEvaluationInput>;
 
@@ -156,7 +158,7 @@ export class CourseService {
         });
         if (!found) throw new Error("COURSE_NOT_FOUND");
 
-        found.image = found.image ? "http://localhost:4000/" + found.image : null;
+        found.image = found.image ? normalizeUrl(config.domain + "/" + found.image) : null;
         return found;
     }
 
@@ -268,7 +270,7 @@ export class CourseService {
 
         items.forEach((item) => {
             // Convert Date objects to ISO strings
-            item.image = item.image ? "http://localhost:4000/" + item.image : null;
+            item.image = item.image ? normalizeUrl(config.domain + "/" + item.image) : null;
         });
 
         return {
@@ -360,7 +362,7 @@ export class CourseService {
             throw new Error("Either id or slug must be provided.");
         }
         if (course.image) {
-            course.image = "http://localhost:4000" + course.image;
+            course.image = normalizeUrl(config.domain + "/" + course.image);
         }
         return course;
     }
