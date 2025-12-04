@@ -390,6 +390,7 @@ model user {
   reading_score        Float?                 @db.Real
   writing_score        Float?                 @db.Real
   slug                 String?                @db.VarChar(50)
+  address              String?
   comment              comment[]
   consultation_request consultation_request[]
   knowledge            knowledge[]
