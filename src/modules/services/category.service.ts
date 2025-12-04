@@ -54,6 +54,7 @@ type CategoryNode = {
     name: string | null;
     slug: string | null;
     url: string | null;
+    parent_id: number | null;
     icon: string | null;
     is_featured: boolean;
     is_disable: boolean;
@@ -221,11 +222,13 @@ export class CategoryService {
         const byId = new Map<number, CategoryNode>();
         for (const r of categories) {
             const id = Number(r.category_id);
+            const parentId = r.parent_id == null ? null : Number(r.parent_id);
             byId.set(id, {
                 id,
                 name: (r as any).name ?? null, // cột "name" trong DB
                 slug: r.slug,
                 url: r.url,
+                parent_id: parentId,
                 icon: r.icon,
                 is_featured: Boolean(r.is_featured),
                 is_disable: Boolean(r.is_disable),
@@ -241,7 +244,7 @@ export class CategoryService {
         for (const r of categories) {
             const id = Number(r.category_id);
             const node = byId.get(id)!;
-            const parentId = r.parent_id == null ? null : Number(r.parent_id);
+            const parentId = node.parent_id;
 
             const isRoot = parentId == null || parentId === id || !byId.has(parentId);
 
@@ -274,9 +277,7 @@ export class CategoryService {
             // - hoặc parent không tồn tại (edge-case)
             const isTypeRoot = (n: CategoryNode) => {
                 if (n.category_type !== categoryType) return false;
-                // tìm parent từ categories gốc
-                const row = categories.find((c) => Number(c.category_id) === n.id)!;
-                const pid = row.parent_id == null ? null : Number(row.parent_id);
+                const pid = n.parent_id;
                 if (pid == null || pid === n.id || !byId.has(pid)) return true;
                 const pNode = byId.get(pid)!;
                 return pNode.category_type !== categoryType;
