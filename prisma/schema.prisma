@@ -316,7 +316,7 @@ model role_permission {
 
 model student {
   student_id Int          @id @default(autoincrement())
-  user_id    Int          @unique
+  user_id    Int?         @unique
   phone      String?      @db.VarChar(30)
   dob        DateTime?    @db.Date
   address    String?
@@ -326,9 +326,12 @@ model student {
   created_by String?      @db.VarChar(50)
   updated_by String?      @db.VarChar(50)
   version    Int?         @default(1)
+  full_name  String       @db.VarChar(255)
+  course_id  Int?
+  slug       String       @db.VarChar(255)
   enrollment enrollment[]
   review     review[]
-  user       user         @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  user       user?        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model tag {

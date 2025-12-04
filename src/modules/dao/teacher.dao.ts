@@ -1,4 +1,4 @@
-import { teacher } from "@prisma/client";
+import { Prisma, teacher } from "@prisma/client";
 
 import prisma from "@config/database";
 
@@ -19,13 +19,13 @@ export class TeacherDAO {
         return prisma.teacher.findMany();
     }
 
-    async create(data: Omit<teacher, "id" | "createdAt" | "updatedAt">): Promise<teacher> {
+    async create(data: Prisma.teacherUncheckedCreateInput): Promise<teacher> {
         return prisma.teacher.create({
             data,
         });
     }
 
-    async update(id: number, data: Partial<teacher>): Promise<teacher> {
+    async update(id: number, data: Prisma.teacherUncheckedUpdateInput): Promise<teacher> {
         return prisma.teacher.update({
             where: { teacher_id: id },
             data,

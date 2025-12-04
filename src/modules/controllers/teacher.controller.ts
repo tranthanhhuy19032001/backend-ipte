@@ -5,6 +5,19 @@ import { camelCaseKeysDeep } from "@utils/response";
 const teacherService = new TeacherService();
 
 export class TeacherController {
+    async createTeacher(req: Request, res: Response): Promise<void> {
+        try {
+            const { teacher_id, teacherId, id, ...data } = req.body;
+            const created = await teacherService.createTeacher(data);
+            res.status(201).json(camelCaseKeysDeep(created));
+        } catch (error: any) {
+            res.status(500).json({
+                message: "Failed to create teacher",
+                error: error.message,
+            });
+        }
+    }
+
     async getTeachers(req: Request, res: Response): Promise<void> {
         try {
             const page = req.query.page ? Number(req.query.page) : 1;
@@ -30,7 +43,7 @@ export class TeacherController {
 
     async getTeacherDetail(req: Request, res: Response): Promise<void> {
         const { id, slug } = req.query;
-        if (Number.isNaN(id)) {
+        if (id && Number.isNaN(Number(id))) {
             res.status(400).json({ message: "Invalid teacher_id." });
             return;
         }
@@ -47,6 +60,27 @@ export class TeacherController {
         } catch (error: any) {
             res.status(500).json({
                 message: "Failed to fetch teacher",
+                error: error.message,
+            });
+        }
+    }
+
+    async updateTeacher(req: Request, res: Response): Promise<void> {
+        const id = Number(req.params.id);
+        if (Number.isNaN(id)) {
+            res.status(400).json({ message: "Invalid teacher_id." });
+            return;
+        }
+        try {
+            const updated = await teacherService.updateTeacher(id, req.body);
+            res.status(200).json(camelCaseKeysDeep(updated));
+        } catch (error: any) {
+            if (error?.message === "TEACHER_NOT_FOUND") {
+                res.status(404).json({ message: "Teacher not found." });
+                return;
+            }
+            res.status(500).json({
+                message: "Failed to update teacher",
                 error: error.message,
             });
         }
