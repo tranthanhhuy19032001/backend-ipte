@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { AboutService } from "@services/about.service";
 import { camelCaseKeysDeep } from "@utils/response";
+import { config } from "@config/index";
+import { normalizeUrl } from "@utils/objectUtils";
 
 export class AboutController {
     async create(req: Request, res: Response) {
@@ -68,13 +70,18 @@ export class AboutController {
     }
 
     async getDetail(req: Request, res: Response) {
-        const { slug } = req.query;
-        if (!slug || typeof slug !== "string") {
-            return res.status(400).json({ message: "Slug is required." });
-        }
+        const { slug, category } = req.query;
+        let found;
         try {
-            const found = await AboutService.getBySlug(slug);
+            if (slug) {
+                found = await AboutService.getBySlug(slug as string);
+            } else {
+                found = await AboutService.getByCategory(category as string);
+            }
             if (!found) return res.status(404).json({ message: "About not found." });
+            // if (found.image) {
+            //     found.image = normalizeUrl(config.domain + "/" + found.image);
+            // }
             res.json(camelCaseKeysDeep(found));
         } catch {
             res.status(500).json({ message: "Failed to get about detail." });

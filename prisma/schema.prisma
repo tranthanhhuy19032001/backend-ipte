@@ -30,6 +30,7 @@ model about_me {
   tiktok_url   String?   @db.VarChar(255)
   youtube_url  String?   @db.VarChar(255)
   slug         String    @unique(map: "about_me_unique") @db.VarChar(255)
+  image        String?
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

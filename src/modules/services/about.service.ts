@@ -6,6 +6,7 @@ export type AboutDTO = {
     aboutId?: number;
 
     slug?: string;
+    image?: string | null;
     title?: string;
     description?: string | null;
 
@@ -49,6 +50,7 @@ export type AboutListQuery = {
 function mapToEntity(data: Partial<AboutDTO>) {
     return {
         ...(data.slug !== undefined && { slug: data.slug }),
+        ...(data.image !== undefined && { image: data.image }),
         ...(data.title !== undefined && { title: data.title }),
         ...(data.description !== undefined && { description: data.description }),
         ...(data.mission !== undefined && { mission: data.mission }),
@@ -67,7 +69,11 @@ function mapToEntity(data: Partial<AboutDTO>) {
     };
 }
 
-function buildAboutWhere(q?: string, category?: string, about_id?: number): Prisma.about_meWhereInput {
+function buildAboutWhere(
+    q?: string,
+    category?: string,
+    about_id?: number
+): Prisma.about_meWhereInput {
     const orConditions: Prisma.about_meWhereInput[] = [];
 
     if (q && q.trim() !== "") {
@@ -104,7 +110,8 @@ function buildAboutWhere(q?: string, category?: string, about_id?: number): Pris
 export class AboutService {
     static async create(payload: Partial<AboutDTO>) {
         const slugSource = payload.slug ?? payload.title ?? "about";
-        const desiredSlug = (typeof slugSource === "string" ? slugSource.trim() : slugSource) || "about";
+        const desiredSlug =
+            (typeof slugSource === "string" ? slugSource.trim() : slugSource) || "about";
         const uniqueSlug = await ensureUniqueAboutSlug(desiredSlug);
 
         const data: Prisma.about_meCreateInput = {
@@ -151,7 +158,8 @@ export class AboutService {
         if (!found) throw new Error("ABOUT_NOT_FOUND");
 
         const slugSource = payload.slug ?? payload.title ?? found.slug ?? found.title ?? "about";
-        const desiredSlug = (typeof slugSource === "string" ? slugSource.trim() : slugSource) || "about";
+        const desiredSlug =
+            (typeof slugSource === "string" ? slugSource.trim() : slugSource) || "about";
         const uniqueSlug = await ensureUniqueAboutSlug(desiredSlug, id);
 
         const data: Prisma.about_meUpdateInput = {
@@ -181,6 +189,9 @@ export class AboutService {
 
     static async getBySlug(slug: string) {
         return prisma.about_me.findFirst({ where: { slug } });
+    }
+    static async getByCategory(category: string) {
+        return prisma.about_me.findFirst({ where: { category } });
     }
 }
 
