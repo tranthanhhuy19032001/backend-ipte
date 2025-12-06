@@ -72,7 +72,7 @@ export class NewsDAO {
         });
     }
 
-    async update(id: number, data: Partial<news>): Promise<news> {
+    async update(id: number, data: Partial<Prisma.newsUpdateInput>): Promise<news> {
         return prisma.news.update({
             where: { news_id: id },
             data,

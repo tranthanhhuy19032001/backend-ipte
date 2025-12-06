@@ -162,7 +162,8 @@ export class NewsService {
     }
 
     async updateNews(id: number, data: Partial<news>): Promise<news> {
-        return this.newsDAO.update(id, data);
+        const normalizedData = normalizeUpdateInput(data);
+        return this.newsDAO.update(id, normalizedData);
     }
 
     async deleteNews(id: number): Promise<news> {
@@ -204,6 +205,35 @@ function normalizeCreateInput(input: SeoEvaluationInput) {
         created_by: "system",
         updated_by: "system",
         version: 1,
+    };
+    return data;
+}
+
+function normalizeUpdateInput(input: Partial<SeoEvaluationInput>) {
+    const data: Partial<Prisma.newsUpdateInput> = {
+        ...(input.slug && { slug: input.slug }),
+        ...(input.title && { title: input.title }),
+        ...(input.content && { content: input.content }),
+        ...(input.description && { description: input.description }),
+        ...(input.level && { level: input.level as any }),
+        ...(input.category && { category: input.category as any }),
+        ...(input.categoryId && { category_id: input.categoryId }),
+        ...(input.image && { image: input.image }),
+        ...(input.content && { content: input.content }),
+        ...(input.duration && { duration: input.duration }),
+        // ...(input.startDate && { start_date: new Date(input.startDate) }),
+        // ...(input.endDate && { end_date: new Date(input.endDate) }),
+        ...(input.metaTitle && { meta_title: input.metaTitle }),
+        ...(input.metaDescription && { meta_description: input.metaDescription }),
+        ...(input.audience && input.audience.length > 0 && { audience: input.audience }),
+        ...(input.tags && input.tags.length > 0 && { tags: input.tags }),
+        ...(input.keywords && input.keywords.length > 0 && { keywords: input.keywords }),
+        ...(input.schemaEnabled !== undefined && { schema_enabled: input.schemaEnabled }),
+        ...(input.schemaMode && { schema_mode: input.schemaMode }),
+        ...(input.schemaData && { schema_data: input.schemaData }),
+        ...(input.benefits && { benefits: input.benefits }),
+        ...(input.tuition && { tuition: input.tuition }),
+        updated_by: "system",
     };
     return data;
 }
