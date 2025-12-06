@@ -232,6 +232,8 @@ model news {
   schema_mode      String?        @db.VarChar(50)
   schema_data      String?
   seo_score        Int?
+  start_date       DateTime?      @db.Date
+  end_date         DateTime?      @db.Date
   user             user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
 }
 
