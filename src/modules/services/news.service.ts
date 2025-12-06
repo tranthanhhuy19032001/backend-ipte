@@ -233,6 +233,10 @@ function normalizeUpdateInput(input: Partial<SeoEvaluationInput>) {
         ...(input.schemaData && { schema_data: input.schemaData }),
         ...(input.benefits && { benefits: input.benefits }),
         ...(input.tuition && { tuition: input.tuition }),
+        ...(input.isDisabled !== undefined && { is_disabled: input.isDisabled }),
+        ...(input.isFeatured !== undefined && { is_featured: input.isFeatured }),
+        ...(input.isProminent !== undefined && { is_prominent: input.isProminent }),
+        ...(input.status && { status: input.status as any }),
         updated_by: "system",
     };
     return data;

@@ -1,11 +1,11 @@
 export interface SeoEvaluationInput {
-    author: number | null,
-    title: string,
-    slug: string | null,
-    level: string | null,
-    category: string | null,
-    categoryId: number | null,
-    description: string | null,
+    author: number | null;
+    title: string;
+    slug: string | null;
+    level: string | null;
+    category: string | null;
+    categoryId: number | null;
+    description: string | null;
     isDisabled: boolean | null;
     isFeatured: boolean | null;
     image: string | null;
@@ -23,4 +23,6 @@ export interface SeoEvaluationInput {
     schemaData: string | null;
     benefits: string | null;
     tuition: string | null;
+    isProminent: boolean | null;
+    status: string | null;
 }
