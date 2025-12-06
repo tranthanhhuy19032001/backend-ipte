@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { NewsService } from "@services/news.service";
 import { camelCaseKeysDeep } from "@utils/response";
+import { getUserIdFromRequest } from "@utils/jwt";
 
 const newsService = new NewsService();
 
@@ -67,8 +68,14 @@ export class NewsController {
 
     async createNews(req: Request, res: Response): Promise<void> {
         try {
+            const userId = getUserIdFromRequest(req);
+            if (!userId) {
+                res.status(401).json({ message: "Unauthorized" });
+                return;
+            }
+
             const { news_id, newsId, ...data } = req.body;
-            const news = await newsService.createNews(data);
+            const news = await newsService.createNews({ ...data, author: userId });
             res.status(201).json(camelCaseKeysDeep(news));
         } catch (error: any) {
             res.status(500).json({

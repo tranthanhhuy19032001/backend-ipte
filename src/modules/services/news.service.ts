@@ -1,4 +1,4 @@
-import { NewsDAO } from "@dao/news.dao";
+import { NewsDAO, NewsWithAuthorAndCategory, NewsWithAuthorName } from "@dao/news.dao";
 import { KnowledgeDAO } from "@dao/knowledge.dao";
 import { news } from "@prisma/client";
 import slugify from "slugify";
@@ -43,6 +43,11 @@ type NewsJoined = {
     authorAvatar: string | null;
 };
 
+type NewsResponse = Omit<NewsWithAuthorAndCategory, "author_id" | "author_name" | "category_type"> & {
+    author: string | null;
+    category_type: string | null;
+};
+
 export class NewsService {
     private newsDAO: NewsDAO;
     private knowledgeDAO: KnowledgeDAO;
@@ -52,8 +57,9 @@ export class NewsService {
         this.knowledgeDAO = new KnowledgeDAO();
     }
 
-    async getNewsById(id: number): Promise<news | null> {
-        return this.newsDAO.findById(id);
+    async getNewsById(id: number): Promise<NewsResponse | null> {
+        const found = await this.newsDAO.findById(id);
+        return replaceAuthorIdWithName(found);
     }
 
     async getNewsAndTips(): Promise<newsJoinedKnowledge> {
@@ -76,12 +82,22 @@ export class NewsService {
         categoryType?: string;
         page: number;
         pageSize: number;
-    }) {
-        return this.newsDAO.findAllNews(filters);
+    }): Promise<{
+        items: NewsResponse[];
+        page: number;
+        page_size: number;
+        total: number;
+        total_pages: number;
+    }> {
+        const result = await this.newsDAO.findAllNews(filters);
+        return {
+            ...result,
+            items: result.items.map((item) => replaceAuthorIdWithName(item)!),
+        };
     }
 
-    async getNewsDetail(id?: number, slug?: string): Promise<news | null> {
-        let found: news | null = null;
+    async getNewsDetail(id?: number, slug?: string): Promise<NewsResponse | null> {
+        let found: NewsWithAuthorName | null = null;
         if (id !== undefined) {
             found = await this.newsDAO.findById(id);
         } else if (slug !== undefined) {
@@ -89,10 +105,11 @@ export class NewsService {
         } else {
             throw new Error("Either id or slug must be provided.");
         }
-        if (found && found.image) {
-            found.image = normalizeUrl(config.domain + "/" + found.image);
+        const news = replaceAuthorIdWithName(found);
+        if (news && news.image) {
+            news.image = normalizeUrl(config.domain + "/" + news.image);
         }
-        return found;
+        return news;
     }
 
     async createNews(input: SeoEvaluationInput) {
@@ -156,6 +173,7 @@ function normalizeCreateInput(input: SeoEvaluationInput) {
         slug: input.slug!,
         title: input.title,
         content: input.content!,
+        ...(input.author !== undefined && input.author !== null && { author_id: input.author }),
         ...(input.description && { description: input.description }),
         ...(input.level && { level: input.level as any }),
         ...(input.category && { category: input.category as any }),
@@ -197,4 +215,14 @@ async function ensureUniqueSlug(base: string, newsIdToExclude?: number): Promise
         i += 1;
         candidate = `${baseSlug}-${i}`;
     }
+}
+
+function replaceAuthorIdWithName(item: NewsWithAuthorName | null): NewsResponse | null {
+    if (!item) return null;
+    const { author_name, author_id, ...rest } = item as any;
+    const resolvedName = author_name ?? null;
+    return {
+        ...rest,
+        author: resolvedName,
+    };
 }

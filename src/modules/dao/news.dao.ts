@@ -1,4 +1,4 @@
-import { news } from "@prisma/client";
+import { Prisma, category, news } from "@prisma/client";
 
 import prisma from "@config/database";
 
@@ -13,17 +13,40 @@ type NewsJoined = {
     authorAvatar: string | null;
 };
 
+export type NewsWithAuthorName = news & { author_name: string | null };
+export type NewsWithAuthorAndCategory = NewsWithAuthorName & { category_type: string | null };
+
+const newsInclude = {
+    user: {
+        select: {
+            full_name: true,
+        },
+    },
+};
+
+function mapNewsWithAuthor(
+    record: Prisma.newsGetPayload<{ include: typeof newsInclude }> | null
+): NewsWithAuthorName | null {
+    if (!record) return null;
+    const { user, ...rest } = record;
+    return { ...rest, author_name: user?.full_name ?? null };
+}
+
 export class NewsDAO {
-    async findById(id: number): Promise<news | null> {
-        return prisma.news.findUnique({
+    async findById(id: number): Promise<NewsWithAuthorAndCategory | null> {
+        const record = await prisma.news.findUnique({
             where: { news_id: id },
+            include: newsInclude,
         });
+        return this.attachCategoryType(mapNewsWithAuthor(record));
     }
 
-    async findBySlug(slug: string): Promise<news | null> {
-        return prisma.news.findUnique({
+    async findBySlug(slug: string): Promise<NewsWithAuthorAndCategory | null> {
+        const record = await prisma.news.findUnique({
             where: { slug: slug },
+            include: newsInclude,
         });
+        return this.attachCategoryType(mapNewsWithAuthor(record));
     }
 
     async findAll(): Promise<NewsJoined[]> {
@@ -33,6 +56,7 @@ export class NewsDAO {
                     n.description,
                     n.content,
                     c.name AS category,
+                    c.category_type AS "categoryType",
                     u.full_name AS authorName,
                     u.avatar AS authorAvatar
         FROM "category" c
@@ -73,7 +97,7 @@ export class NewsDAO {
         page: number;
         pageSize: number;
     }): Promise<{
-        items: news[];
+        items: NewsWithAuthorAndCategory[];
         page: number;
         page_size: number;
         total: number;
@@ -93,7 +117,7 @@ export class NewsDAO {
         } = filters;
         const skip = (page - 1) * pageSize;
         const take = pageSize;
-        const whereClause: any = {};
+        const whereClause: Prisma.newsWhereInput = {};
         if (search) {
             whereClause.OR = [
                 { title: { contains: search, mode: "insensitive" } },
@@ -120,7 +144,7 @@ export class NewsDAO {
             whereClause.status = status;
         }
         if (isProminent !== undefined) {
-            whereClause.is_prominent = isProminent;
+            whereClause.is_prominent = Boolean(isProminent);
         }
         if (categoryId) {
             whereClause.category_id = categoryId;
@@ -145,15 +169,52 @@ export class NewsDAO {
                 skip,
                 take,
                 orderBy: { created_at: "desc" },
+                include: newsInclude,
             }),
             prisma.news.count({ where: whereClause }),
         ]);
+        const itemsWithAuthor = items.map((item) => mapNewsWithAuthor(item)!);
+        const itemsWithCategory = await this.attachCategoryTypes(itemsWithAuthor);
         return {
-            items,
+            items: itemsWithCategory,
             page,
             page_size: pageSize,
             total,
             total_pages: Math.ceil(total / pageSize),
         };
+    }
+
+    private async attachCategoryTypes(
+        items: NewsWithAuthorName[]
+    ): Promise<NewsWithAuthorAndCategory[]> {
+        const categoryIds = Array.from(
+            new Set(items.map((n) => n.category_id).filter((id): id is number => !!id))
+        );
+        let categories: Pick<category, "category_id" | "category_type">[] = [];
+        if (categoryIds.length) {
+            categories = await prisma.category.findMany({
+                where: { category_id: { in: categoryIds } },
+                select: { category_id: true, category_type: true },
+            });
+        }
+        const categoryMap = new Map<number, string | null>();
+        categories.forEach((c) => categoryMap.set(c.category_id, c.category_type ?? null));
+
+        return items.map((item) => ({
+            ...item,
+            category_type: categoryMap.get(item.category_id!) ?? null,
+        }));
+    }
+
+    private async attachCategoryType(
+        item: NewsWithAuthorName | null
+    ): Promise<NewsWithAuthorAndCategory | null> {
+        if (!item) return null;
+        if (!item.category_id) return { ...item, category_type: null };
+        const category = await prisma.category.findUnique({
+            where: { category_id: item.category_id },
+            select: { category_type: true },
+        });
+        return { ...item, category_type: category?.category_type ?? null };
     }
 }
