@@ -214,7 +214,7 @@ model news {
   content          String
   status           publish_status @default(DRAFT)
   published_at     DateTime?      @db.Timestamp(6)
-  tag_ids          Int[]
+  tags             String[]       @default([])
   keywords         String[]       @default([])
   created_at       DateTime?      @default(now()) @db.Timestamp(6)
   updated_at       DateTime?      @default(now()) @db.Timestamp(6)

@@ -43,7 +43,10 @@ type NewsJoined = {
     authorAvatar: string | null;
 };
 
-type NewsResponse = Omit<NewsWithAuthorAndCategory, "author_id" | "author_name" | "category_type"> & {
+type NewsResponse = Omit<
+    NewsWithAuthorAndCategory,
+    "author_id" | "author_name" | "category_type"
+> & {
     author: string | null;
     category_type: string | null;
 };
@@ -147,7 +150,7 @@ export class NewsService {
                 code: e?.code,
                 message: e?.message,
                 meta: e?.meta,
-                data: data
+                data: data,
             });
             if (e?.code === "P2002") {
                 // unique violation (course_code or slug)
@@ -173,7 +176,6 @@ function normalizeCreateInput(input: SeoEvaluationInput) {
         slug: input.slug!,
         title: input.title,
         content: input.content!,
-        ...(input.author !== undefined && input.author !== null && { author_id: input.author }),
         ...(input.description && { description: input.description }),
         ...(input.level && { level: input.level as any }),
         ...(input.category && { category: input.category as any }),
@@ -186,12 +188,19 @@ function normalizeCreateInput(input: SeoEvaluationInput) {
         ...(input.metaTitle && { meta_title: input.metaTitle }),
         ...(input.metaDescription && { meta_description: input.metaDescription }),
         ...(input.audience && input.audience.length > 0 && { audience: input.audience }),
+        ...(input.tags && input.tags.length > 0 && { tags: input.tags }),
         ...(input.keywords && input.keywords.length > 0 && { keywords: input.keywords }),
         ...(input.schemaEnabled !== undefined && { schema_enabled: input.schemaEnabled }),
         ...(input.schemaMode && { schema_mode: input.schemaMode }),
         ...(input.schemaData && { schema_data: input.schemaData }),
         ...(input.benefits && { benefits: input.benefits }),
         ...(input.tuition && { tuition: input.tuition }),
+        ...(input.author !== undefined &&
+            input.author !== null && {
+                user: {
+                    connect: { user_id: input.author },
+                },
+            }),
         created_by: "system",
         updated_by: "system",
         version: 1,
