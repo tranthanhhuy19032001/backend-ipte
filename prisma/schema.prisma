@@ -8,29 +8,30 @@ datasource db {
 }
 
 model about_me {
-  about_id     Int       @id @default(autoincrement())
-  title        String?   @db.VarChar(255)
-  description  String?
-  mission      String?
-  vision       String?
-  email        String?   @db.VarChar(255)
-  phone        String?   @db.VarChar(50)
-  hotline      String?   @db.VarChar(50)
-  website      String?   @db.VarChar(255)
-  address      String?
-  facebook_url String?   @db.VarChar(255)
-  zalo_url     String?   @db.VarChar(255)
-  created_at   DateTime? @default(now()) @db.Timestamp(6)
-  updated_at   DateTime? @default(now()) @db.Timestamp(6)
-  created_by   String?   @db.VarChar(50)
-  updated_by   String?   @db.VarChar(50)
-  version      Int?      @default(1)
-  category     String?   @db.VarChar(25)
-  map_url      String?
-  tiktok_url   String?   @db.VarChar(255)
-  youtube_url  String?   @db.VarChar(255)
-  slug         String    @unique(map: "about_me_unique") @db.VarChar(255)
-  image        String?
+  about_id         Int       @id @default(autoincrement())
+  title            String?   @db.VarChar(255)
+  description      String?
+  mission          String?
+  vision           String?
+  email            String?   @db.VarChar(255)
+  phone            String?   @db.VarChar(50)
+  hotline          String?   @db.VarChar(50)
+  website          String?   @db.VarChar(255)
+  address          String?
+  facebook_url     String?   @db.VarChar(255)
+  zalo_url         String?   @db.VarChar(255)
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @default(now()) @db.Timestamp(6)
+  created_by       String?   @db.VarChar(50)
+  updated_by       String?   @db.VarChar(50)
+  version          Int?      @default(1)
+  category         String?   @db.VarChar(25)
+  map_url          String?
+  tiktok_url       String?   @db.VarChar(255)
+  youtube_url      String?   @db.VarChar(255)
+  slug             String    @unique(map: "about_me_unique") @db.VarChar(255)
+  image            String?
+  delete_image_url String?
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -144,6 +145,7 @@ model course {
   schema_data          String?
   benefits             String?
   seo_score            Int?
+  delete_image_url     String?
   comment              comment[]
   commitment           commitment[]
   consultation_request consultation_request[]
@@ -234,6 +236,7 @@ model news {
   seo_score        Int?
   start_date       DateTime?      @db.Date
   end_date         DateTime?      @db.Date
+  delete_image_url String?
   user             user?          @relation(fields: [author_id], references: [user_id], onUpdate: NoAction)
 }
 

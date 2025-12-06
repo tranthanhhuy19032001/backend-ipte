@@ -1,6 +1,7 @@
 import prisma from "@config/database";
 import { Prisma } from "@prisma/client";
 import slugify from "slugify";
+import { ImgbbResponse, ImgbbService } from "@services/imgbb.service";
 
 export type AboutDTO = {
     aboutId?: number;
@@ -108,21 +109,36 @@ function buildAboutWhere(
 }
 
 export class AboutService {
-    static async create(payload: Partial<AboutDTO>) {
+    static async create(payload: Partial<AboutDTO>, file?: Express.Multer.File) {
         const slugSource = payload.slug ?? payload.title ?? "about";
         const desiredSlug =
             (typeof slugSource === "string" ? slugSource.trim() : slugSource) || "about";
         const uniqueSlug = await ensureUniqueAboutSlug(desiredSlug);
 
+        let imgbbResponse: ImgbbResponse | undefined;
+        try {
+            imgbbResponse = await ImgbbService.uploadFromInput(payload.image, file, {
+                fileName: uniqueSlug,
+            });
+        } catch (err: any) {
+            console.error("Error uploading image to IMGBB:", err?.message || err);
+            throw new Error(`IMAGE_UPLOAD_FAILED: ${err?.message || "UNKNOWN"}`);
+        }
+
         const data: Prisma.about_meCreateInput = {
-            ...mapToEntity({ ...payload, slug: uniqueSlug }),
+            ...mapToEntity({
+                ...payload,
+                slug: uniqueSlug,
+                image: imgbbResponse?.data?.display_url ?? payload.image ?? null,
+            }),
             slug: uniqueSlug,
             created_by: payload.createdBy || "system",
             updated_by: payload.updatedBy || "system",
             version: payload.version ?? 1,
         };
 
-        return prisma.about_me.create({ data });
+        const created = await prisma.about_me.create({ data });
+        return created;
     }
 
     static async getById(id: number) {
@@ -153,7 +169,7 @@ export class AboutService {
         };
     }
 
-    static async update(id: number, payload: Partial<AboutDTO>) {
+    static async update(id: number, payload: Partial<AboutDTO>, file?: Express.Multer.File) {
         const found = await prisma.about_me.findUnique({ where: { about_id: id } });
         if (!found) throw new Error("ABOUT_NOT_FOUND");
 
@@ -162,17 +178,32 @@ export class AboutService {
             (typeof slugSource === "string" ? slugSource.trim() : slugSource) || "about";
         const uniqueSlug = await ensureUniqueAboutSlug(desiredSlug, id);
 
+        let imgbbResponse: ImgbbResponse | undefined;
+        try {
+            imgbbResponse = await ImgbbService.uploadFromInput(payload.image, file, {
+                fileName: uniqueSlug,
+            });
+        } catch (err: any) {
+            console.error("Error uploading image to IMGBB:", err?.message || err);
+            throw new Error(`IMAGE_UPLOAD_FAILED: ${err?.message || "UNKNOWN"}`);
+        }
+
         const data: Prisma.about_meUpdateInput = {
-            ...mapToEntity({ ...payload, slug: uniqueSlug }),
+            ...mapToEntity({
+                ...payload,
+                slug: uniqueSlug,
+                image: imgbbResponse?.data?.display_url ?? payload.image ?? undefined,
+            }),
             updated_at: new Date(),
             updated_by: payload.updatedBy || "system",
             version: { increment: 1 },
         };
 
-        return prisma.about_me.update({
+        const updated = await prisma.about_me.update({
             where: { about_id: id },
             data,
         });
+        return updated;
     }
 
     static async remove(id: number) {
@@ -182,16 +213,19 @@ export class AboutService {
     }
 
     static async listByCategory(category?: string) {
-        return prisma.about_me.findMany({
+        const items = await prisma.about_me.findMany({
             where: category ? { category } : {},
         });
+        return items;
     }
 
     static async getBySlug(slug: string) {
-        return prisma.about_me.findFirst({ where: { slug } });
+        const item = await prisma.about_me.findFirst({ where: { slug } });
+        return item;
     }
     static async getByCategory(category: string) {
-        return prisma.about_me.findFirst({ where: { category } });
+        const item = await prisma.about_me.findFirst({ where: { category } });
+        return item;
     }
 }
 

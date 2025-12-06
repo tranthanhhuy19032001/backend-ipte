@@ -2,6 +2,7 @@ import { Router } from "express";
 import { CourseController } from "@controllers/course.controller";
 import { authRole } from "@middlewares/authorization";
 import { Role } from "@enums/role.enum";
+import { upload } from "@middlewares/upload";
 
 const router = Router();
 const courseController = new CourseController();
@@ -173,10 +174,20 @@ const courseController = new CourseController();
 
 router.get("/detail", courseController.getCourseDetail.bind(courseController));
 
-router.post("/", authRole([Role.ADMIN]), courseController.create.bind(courseController));
+router.post(
+    "/",
+    authRole([Role.ADMIN]),
+    upload.single("file"),
+    courseController.create.bind(courseController)
+);
 router.get("/", courseController.list.bind(courseController));
 router.get("/:id", courseController.getById.bind(courseController));
-router.put("/:id", authRole([Role.ADMIN]), courseController.update.bind(courseController));
+router.put(
+    "/:id",
+    authRole([Role.ADMIN]),
+    upload.single("file"),
+    courseController.update.bind(courseController)
+);
 router.delete("/:id", authRole([Role.ADMIN]), courseController.remove.bind(courseController));
 
 router.get("/slug/:slug", courseController.getBySlug.bind(courseController));

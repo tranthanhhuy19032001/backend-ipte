@@ -5,9 +5,8 @@ import slugify from "slugify";
 import prisma from "@config/database";
 import { SeoEvaluationInput } from "@dto/SeoEvaluationInput";
 import { Prisma } from "@prisma/client";
-import { saveBase64Image, deleteImage } from "@utils/imageHandler";
-import { config } from "@config/index";
-import { normalizeUrl } from "@utils/objectUtils";
+import { ImgbbResponse } from "@services/imgbb.service";
+import { ImgbbService } from "@services/imgbb.service";
 
 type newsJoinedKnowledge = {
     news: {
@@ -62,7 +61,7 @@ export class NewsService {
 
     async getNewsById(id: number): Promise<NewsResponse | null> {
         const found = await this.newsDAO.findById(id);
-        return replaceAuthorIdWithName(found);
+        return toNewsResponse(found);
     }
 
     async getNewsAndTips(): Promise<newsJoinedKnowledge> {
@@ -71,7 +70,10 @@ export class NewsService {
 
         const newsResult = await news;
         const tipsResult = await tips;
-        return { news: newsResult, tips: tipsResult };
+        return {
+            news: newsResult,
+            tips: tipsResult,
+        };
     }
 
     async getAllNews(filters: {
@@ -95,7 +97,9 @@ export class NewsService {
         const result = await this.newsDAO.findAllNews(filters);
         return {
             ...result,
-            items: result.items.map((item) => replaceAuthorIdWithName(item)!),
+            items: result.items
+                .map((item) => toNewsResponse(item))
+                .filter((item): item is NewsResponse => item !== null),
         };
     }
 
@@ -108,62 +112,101 @@ export class NewsService {
         } else {
             throw new Error("Either id or slug must be provided.");
         }
-        const news = replaceAuthorIdWithName(found);
-        if (news && news.image) {
-            news.image = normalizeUrl(config.domain + "/" + news.image);
-        }
-        return news;
+        return toNewsResponse(found);
     }
 
-    async createNews(input: SeoEvaluationInput) {
-        // đảm bảo slug
+    async createNews(input: SeoEvaluationInput, file?: Express.Multer.File) {
         const desiredSlug = input.slug || input.title;
         const uniqueSlug = await ensureUniqueSlug(desiredSlug!);
 
-        // Process image: decode base64 and save to storage
-        let imagePath: string | null = null;
-        const image = input.image || null;
-        if (image !== null && image.startsWith("data:image")) {
-            try {
-                imagePath = await saveBase64Image(image);
-            } catch (e: any) {
-                console.error("Error processing image:", e.message);
-                throw new Error(`IMAGE_PROCESS_ERROR: ${e.message}`);
-            }
-        } else if (image !== null) {
-            // If it's already a path, keep it
-            imagePath = image;
+        let imgbbResponse: ImgbbResponse | undefined;
+        try {
+            imgbbResponse = await ImgbbService.uploadFromInput(input.image, file, {
+                fileName: uniqueSlug,
+            });
+        } catch (err: any) {
+            console.error("Error uploading image to IMGBB:", err?.message || err);
+            throw new Error(`IMAGE_UPLOAD_FAILED: ${err?.message || "UNKNOWN"}`);
         }
 
-        const data = normalizeCreateInput({ ...input, slug: uniqueSlug, image: imagePath });
+        const data = normalizeCreateInput({
+            ...input,
+            slug: uniqueSlug,
+            image: imgbbResponse?.data?.display_url ?? input.image ?? null,
+            deleteImageUrl: imgbbResponse?.data?.delete_url ?? input.deleteImageUrl ?? null,
+        });
 
         try {
-            console.log("Creating course with data:", JSON.stringify(data, null, 2));
+            console.log("Creating news with data:", JSON.stringify(data, null, 2));
             const created = await prisma.news.create({ data });
             return created;
         } catch (e: any) {
-            // If error occurs, delete the saved image
-            if (imagePath) {
-                deleteImage(imagePath);
-            }
-            console.error("Error creating course:", {
+            console.error("Error creating news:", {
                 code: e?.code,
                 message: e?.message,
                 meta: e?.meta,
                 data: data,
             });
             if (e?.code === "P2002") {
-                // unique violation (course_code or slug)
                 const field = e?.meta?.target?.[0] || "unknown";
-                throw new Error(`COURSE_CONFLICT_${field}`);
+                throw new Error(`NEWS_CONFLICT_${field}`);
             }
             throw e;
         }
     }
 
-    async updateNews(id: number, data: Partial<news>): Promise<news> {
-        const normalizedData = normalizeUpdateInput(data);
-        return this.newsDAO.update(id, normalizedData);
+    async updateNews(
+        id: number,
+        data: Partial<SeoEvaluationInput>,
+        file?: Express.Multer.File
+    ): Promise<news> {
+        const payload: Partial<SeoEvaluationInput> = { ...data };
+
+        if (payload.slug || payload.title) {
+            const base = payload.slug || payload.title!;
+            payload.slug = await ensureUniqueSlug(base, id);
+        }
+
+        let imgbbResponse: ImgbbResponse | undefined;
+        if (payload.isImageChanged && payload.deleteImageUrl) {
+            try {
+                const deletedResponse = await ImgbbService.deleteByDeleteUrl(
+                    payload.deleteImageUrl
+                );
+                if (deletedResponse) {
+                    imgbbResponse = await ImgbbService.uploadFromInput(payload.image, file, {
+                        fileName: payload.slug || payload.title,
+                    });
+                }
+            } catch (err: any) {
+                if (err) {
+                    console.error("Error uploading image to IMGBB:", err?.message || err);
+                }
+                throw new Error(`IMAGE_UPLOAD_FAILED: ${err?.message || "UNKNOWN"}`);
+            }
+        }
+
+        let image: string | undefined;
+        let deleteImageUrl: string | undefined;
+        if (imgbbResponse) {
+            image = imgbbResponse?.data?.display_url;
+            deleteImageUrl = imgbbResponse?.data?.delete_url;
+        }
+
+        const normalizedData = normalizeUpdateInput({
+            ...payload,
+            ...(image !== undefined ? { image: image } : {}),
+            ...(deleteImageUrl !== undefined ? { deleteImageUrl: deleteImageUrl } : {}),
+        });
+
+        try {
+            return await this.newsDAO.update(id, normalizedData);
+        } catch (e: any) {
+            if (e?.code === "P2025") {
+                throw new Error("NEWS_NOT_FOUND");
+            }
+            throw e;
+        }
     }
 
     async deleteNews(id: number): Promise<news> {
@@ -171,7 +214,6 @@ export class NewsService {
     }
 }
 
-/** Chuẩn hóa data trước khi đưa vào Prisma */
 function normalizeCreateInput(input: SeoEvaluationInput) {
     const data: Prisma.newsCreateInput = {
         slug: input.slug!,
@@ -182,6 +224,7 @@ function normalizeCreateInput(input: SeoEvaluationInput) {
         ...(input.category && { category: input.category as any }),
         ...(input.categoryId && { category_id: input.categoryId }),
         ...(input.image && { image: input.image }),
+        ...(input.deleteImageUrl && { delete_image_url: input.deleteImageUrl }),
         ...(input.content && { content: input.content }),
         ...(input.duration && { duration: input.duration }),
         ...(input.startDate && { start_date: new Date(input.startDate) }),
@@ -268,4 +311,10 @@ function replaceAuthorIdWithName(item: NewsWithAuthorName | null): NewsResponse 
         ...rest,
         author: resolvedName,
     };
+}
+
+function toNewsResponse(item: NewsWithAuthorName | null): NewsResponse | null {
+    const mapped = replaceAuthorIdWithName(item);
+    if (!mapped) return null;
+    return mapped;
 }

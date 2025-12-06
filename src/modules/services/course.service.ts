@@ -1,10 +1,10 @@
 import prisma from "@config/database";
 import { $Enums, Prisma } from "@prisma/client";
 import slugify from "slugify";
-import { saveBase64Image, deleteImage } from "@utils/imageHandler";
+import { deleteImage } from "@utils/imageHandler";
 import { SeoEvaluationInput } from "@dto/SeoEvaluationInput";
-import { config } from "@config/index";
-import { normalizeUrl } from "@utils/objectUtils";
+import { ImgbbResponse } from "@services/imgbb.service";
+import { ImgbbService } from "@services/imgbb.service";
 
 export type CourseUpdateDTO = Partial<SeoEvaluationInput>;
 
@@ -24,7 +24,7 @@ export type CourseListQuery = {
     page_size?: number;
 };
 
-/** Tạo slug duy nhất từ course_name hoặc slug truyền vào */
+/** T?o slug duy nh?t t? course_name ho?c slug truy?n v�o */
 async function ensureUniqueSlug(base: string, courseIdToExclude?: number): Promise<string> {
     const baseSlug = slugify(base, { lower: true, strict: true, trim: true }) || "course";
     let candidate = baseSlug;
@@ -43,7 +43,6 @@ async function ensureUniqueSlug(base: string, courseIdToExclude?: number): Promi
     }
 }
 
-/** Chuẩn hóa data trước khi đưa vào Prisma */
 function normalizeCreateInput(input: SeoEvaluationInput) {
     const data: Prisma.courseCreateInput = {
         course_name: input.title,
@@ -107,58 +106,51 @@ function normalizeUpdateInput(input: CourseUpdateDTO) {
 }
 
 export class CourseService {
-    static async createCourse(input: SeoEvaluationInput) {
-        // đảm bảo slug
+    static async createCourse(input: SeoEvaluationInput, file?: Express.Multer.File) {
         const desiredSlug = input.slug || input.title;
         const uniqueSlug = await ensureUniqueSlug(desiredSlug!);
 
-        // Process image: decode base64 and save to storage
-        let imagePath: string | null = null;
-        const image = input.image || null;
-        if (image !== null && image.startsWith("data:image")) {
-            try {
-                imagePath = await saveBase64Image(image);
-            } catch (e: any) {
-                console.error("Error processing image:", e.message);
-                throw new Error(`IMAGE_PROCESS_ERROR: ${e.message}`);
-            }
-        } else if (image !== null) {
-            // If it's already a path, keep it
-            imagePath = image;
+        let imgbbResponse: ImgbbResponse | undefined;
+        try {
+            imgbbResponse = await ImgbbService.uploadFromInput(input.image, file, {
+                fileName: uniqueSlug,
+            });
+        } catch (err: any) {
+            console.error("Error uploading image to IMGBB:", err?.message || err);
+            throw new Error(`IMAGE_UPLOAD_FAILED: ${err?.message || "UNKNOWN"}`);
         }
-
-        const data = normalizeCreateInput({ ...input, slug: uniqueSlug, image: imagePath });
+        const data = normalizeCreateInput({
+            ...input,
+            slug: uniqueSlug,
+            image: imgbbResponse?.data?.display_url ?? input.image ?? null,
+            deleteImageUrl: imgbbResponse?.data?.delete_url ?? input.deleteImageUrl ?? null,
+        });
 
         try {
             console.log("Creating course with data:", JSON.stringify(data, null, 2));
             const created = await prisma.course.create({ data });
             return created;
         } catch (e: any) {
-            // If error occurs, delete the saved image
-            if (imagePath) {
-                deleteImage(imagePath);
-            }
             console.error("Error creating course:", {
                 code: e?.code,
                 message: e?.message,
                 meta: e?.meta,
-                data: data
+                data: data,
             });
             if (e?.code === "P2002") {
-                // unique violation (course_code or slug)
                 const field = e?.meta?.target?.[0] || "unknown";
                 throw new Error(`COURSE_CONFLICT_${field}`);
             }
             throw e;
         }
-    }    
+    }
+
     static async getCourseById(courseId: number) {
         const found = await prisma.course.findUnique({
             where: { course_id: courseId },
         });
         if (!found) throw new Error("COURSE_NOT_FOUND");
 
-        found.image = found.image ? normalizeUrl(config.domain + "/" + found.image) : null;
         return found;
     }
 
@@ -258,7 +250,7 @@ export class CourseService {
 
         const orderBy: Prisma.courseOrderByWithRelationInput = {
             [sort_by]: sort_order,
-        };
+        } as Prisma.courseOrderByWithRelationInput;
 
         const skip = (Math.max(1, page) - 1) * Math.max(1, page_size);
         const take = Math.max(1, Math.min(page_size, 100));
@@ -267,11 +259,6 @@ export class CourseService {
             prisma.course.findMany({ where, orderBy, skip, take }),
             prisma.course.count({ where }),
         ]);
-
-        items.forEach((item) => {
-            // Convert Date objects to ISO strings
-            item.image = item.image ? normalizeUrl(config.domain + "/" + item.image) : null;
-        });
 
         return {
             items,
@@ -282,41 +269,51 @@ export class CourseService {
         };
     }
 
-    static async updateCourse(courseId: number, input: CourseUpdateDTO) {
-        // nếu đổi tên hoặc đổi slug thì cần đảm bảo slug unique
-        let data = normalizeUpdateInput(input);
-
+    static async updateCourse(
+        courseId: number,
+        input: CourseUpdateDTO,
+        file?: Express.Multer.File
+    ) {
         if (input.slug || input.title) {
             const base = input.slug || input.title!;
             const uniqueSlug = await ensureUniqueSlug(base, courseId);
-            data.slug = uniqueSlug;
+            input.slug = uniqueSlug;
         }
 
-        // Process image if provided
-        if (input.image && input.image.startsWith("data:image")) {
+        let imgbbResponse: ImgbbResponse | undefined;
+        if (input.isImageChanged && input.deleteImageUrl) {
             try {
-                const imagePath = await saveBase64Image(input.image);
-                
-                // Delete old image if exists
-                const oldCourse = await prisma.course.findUnique({
-                    where: { course_id: courseId },
-                    select: { image: true }
-                });
-                if (oldCourse?.image) {
-                    deleteImage(oldCourse.image);
+                const deletedResponse = await ImgbbService.deleteByDeleteUrl(input.deleteImageUrl);
+                if (deletedResponse) {
+                    imgbbResponse = await ImgbbService.uploadFromInput(input.image, file, {
+                        fileName: input.slug || input.title,
+                    });
                 }
-                
-                data.image = imagePath;
-            } catch (e: any) {
-                console.error("Error processing image:", e.message);
-                throw new Error(`IMAGE_PROCESS_ERROR: ${e.message}`);
+            } catch (err: any) {
+                if (err) {
+                    console.error("Error uploading image to IMGBB:", err?.message || err);
+                }
+                throw new Error(`IMAGE_UPLOAD_FAILED: ${err?.message || "UNKNOWN"}`);
             }
         }
+
+        let image: string | undefined;
+        let deleteImageUrl: string | undefined;
+        if (imgbbResponse) {
+            image = imgbbResponse?.data?.display_url;
+            deleteImageUrl = imgbbResponse?.data?.delete_url;
+        }
+
+        const normalizedData = normalizeUpdateInput({
+            ...input,
+            ...(image !== undefined ? { image: image } : {}),
+            ...(deleteImageUrl !== undefined ? { deleteImageUrl: deleteImageUrl } : {}),
+        });
 
         try {
             const updated = await prisma.course.update({
                 where: { course_id: courseId },
-                data,
+                data: normalizedData,
             });
             return updated;
         } catch (e: any) {
@@ -328,14 +325,12 @@ export class CourseService {
 
     static async deleteCourse(courseId: number) {
         try {
-            // Get course to delete its image
             const course = await prisma.course.findUnique({
                 where: { course_id: courseId },
-                select: { image: true }
+                select: { image: true },
             });
 
-            // Delete image file if exists
-            if (course?.image) {
+            if (course?.image && course.image.startsWith("/storage")) {
                 deleteImage(course.image);
             }
 
@@ -360,9 +355,6 @@ export class CourseService {
             course = await this.getCourseBySlug(slug);
         } else {
             throw new Error("Either id or slug must be provided.");
-        }
-        if (course.image) {
-            course.image = normalizeUrl(config.domain + "/" + course.image);
         }
         return course;
     }

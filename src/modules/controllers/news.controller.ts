@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { NewsService } from "@services/news.service";
 import { camelCaseKeysDeep } from "@utils/response";
 import { getUserIdFromRequest } from "@utils/jwt";
+import { parseJsonField } from "@utils/requestParser";
+import { SeoEvaluationInput } from "@dto/SeoEvaluationInput";
 
 const newsService = new NewsService();
 
@@ -67,6 +69,13 @@ export class NewsController {
     }
 
     async createNews(req: Request, res: Response): Promise<void> {
+        let payload: SeoEvaluationInput;
+        try {
+            payload = parseJsonField<SeoEvaluationInput>(req);
+        } catch {
+            res.status(400).json({ message: "Invalid request payload" });
+            return;
+        }
         try {
             const userId = getUserIdFromRequest(req);
             if (!userId) {
@@ -74,8 +83,8 @@ export class NewsController {
                 return;
             }
 
-            const { news_id, newsId, ...data } = req.body;
-            const news = await newsService.createNews({ ...data, author: userId });
+            const { news_id, newsId, ...data } = payload as any;
+            const news = await newsService.createNews({ ...data, author: userId }, req.file);
             res.status(201).json(camelCaseKeysDeep(news));
         } catch (error: any) {
             res.status(500).json({
@@ -111,8 +120,15 @@ export class NewsController {
             res.status(400).json({ message: "Invalid news ID." });
             return;
         }
+        let payload: Partial<SeoEvaluationInput>;
         try {
-            const news = await newsService.updateNews(id, req.body);
+            payload = parseJsonField<Partial<SeoEvaluationInput>>(req);
+        } catch {
+            res.status(400).json({ message: "Invalid request payload" });
+            return;
+        }
+        try {
+            const news = await newsService.updateNews(id, payload, req.file);
             res.status(200).json(camelCaseKeysDeep(news));
         } catch (error: any) {
             if (error?.message === "NEWS_NOT_FOUND") {

@@ -1,13 +1,18 @@
 import { Request, Response } from "express";
-import { AboutService } from "@services/about.service";
+import { AboutDTO, AboutService } from "@services/about.service";
 import { camelCaseKeysDeep } from "@utils/response";
-import { config } from "@config/index";
-import { normalizeUrl } from "@utils/objectUtils";
+import { parseJsonField } from "@utils/requestParser";
 
 export class AboutController {
     async create(req: Request, res: Response) {
+        let payload: Partial<AboutDTO>;
         try {
-            const created = await AboutService.create(req.body);
+            payload = parseJsonField<Partial<AboutDTO>>(req);
+        } catch {
+            return res.status(400).json({ message: "Invalid request payload." });
+        }
+        try {
+            const created = await AboutService.create(payload, req.file);
             res.status(201).json(camelCaseKeysDeep(created));
         } catch (e) {
             res.status(500).json({ message: "Failed to create about." });
@@ -46,8 +51,14 @@ export class AboutController {
     async update(req: Request, res: Response) {
         const id = Number(req.params.id);
         if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid about_id." });
+        let payload: Partial<AboutDTO>;
         try {
-            const updated = await AboutService.update(id, req.body);
+            payload = parseJsonField<Partial<AboutDTO>>(req);
+        } catch {
+            return res.status(400).json({ message: "Invalid request payload." });
+        }
+        try {
+            const updated = await AboutService.update(id, payload, req.file);
             res.json(camelCaseKeysDeep(updated));
         } catch (e: any) {
             if (e?.message === "ABOUT_NOT_FOUND")
@@ -79,9 +90,6 @@ export class AboutController {
                 found = await AboutService.getByCategory(category as string);
             }
             if (!found) return res.status(404).json({ message: "About not found." });
-            // if (found.image) {
-            //     found.image = normalizeUrl(config.domain + "/" + found.image);
-            // }
             res.json(camelCaseKeysDeep(found));
         } catch {
             res.status(500).json({ message: "Failed to get about detail." });

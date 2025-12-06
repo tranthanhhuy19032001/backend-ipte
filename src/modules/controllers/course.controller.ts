@@ -1,13 +1,20 @@
 import { Request, Response } from "express";
 import { CourseService } from "@services/course.service";
 import { camelCaseKeysDeep } from "@utils/response";
+import { parseJsonField } from "@utils/requestParser";
+import { SeoEvaluationInput } from "@dto/SeoEvaluationInput";
 
 export class CourseController {
     async create(req: Request, res: Response) {
+        let payload: SeoEvaluationInput;
         try {
-            // Loại bỏ course_id vì nó tự động tăng
-            const { course_id, courseId, ...data } = req.body;
-            const created = await CourseService.createCourse(data);
+            payload = parseJsonField<SeoEvaluationInput>(req);
+        } catch {
+            return res.status(400).json({ message: "Invalid request payload." });
+        }
+        try {
+            const { course_id, courseId, ...data } = payload as any;
+            const created = await CourseService.createCourse(data, req.file);
             res.status(201).json(camelCaseKeysDeep(created));
         } catch (e: any) {
             if (e?.message === "COURSE_CONFLICT") {
@@ -73,11 +80,17 @@ export class CourseController {
     }
 
     async update(req: Request, res: Response) {
+        let payload: Partial<SeoEvaluationInput>;
+        try {
+            payload = parseJsonField<Partial<SeoEvaluationInput>>(req);
+        } catch {
+            return res.status(400).json({ message: "Invalid request payload." });
+        }
         try {
             const id = Number(req.params.id);
             if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid course id." });
 
-            const updated = await CourseService.updateCourse(id, req.body);
+            const updated = await CourseService.updateCourse(id, payload, req.file);
             res.json(camelCaseKeysDeep(updated));
         } catch (e: any) {
             if (e?.message === "COURSE_NOT_FOUND") {

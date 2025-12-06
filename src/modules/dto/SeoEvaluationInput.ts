@@ -25,4 +25,6 @@ export interface SeoEvaluationInput {
     tuition: string | null;
     isProminent: boolean | null;
     status: string | null;
+    deleteImageUrl: string | null;
+    isImageChanged: boolean | null;
 }
