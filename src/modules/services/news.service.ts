@@ -173,11 +173,9 @@ export class NewsService {
                 const deletedResponse = await ImgbbService.deleteByDeleteUrl(
                     payload.deleteImageUrl
                 );
-                if (deletedResponse) {
-                    imgbbResponse = await ImgbbService.uploadFromInput(payload.image, file, {
-                        fileName: payload.slug || payload.title,
-                    });
-                }
+                imgbbResponse = await ImgbbService.uploadFromInput(payload.image, file, {
+                    fileName: payload.slug || payload.title,
+                });
             } catch (err: any) {
                 if (err) {
                     console.error("Error uploading image to IMGBB:", err?.message || err);

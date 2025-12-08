@@ -284,11 +284,10 @@ export class CourseService {
         if (input.isImageChanged && input.deleteImageUrl) {
             try {
                 const deletedResponse = await ImgbbService.deleteByDeleteUrl(input.deleteImageUrl);
-                if (deletedResponse) {
-                    imgbbResponse = await ImgbbService.uploadFromInput(input.image, file, {
-                        fileName: input.slug || input.title,
-                    });
-                }
+
+                imgbbResponse = await ImgbbService.uploadFromInput(input.image, file, {
+                    fileName: input.slug || input.title,
+                });
             } catch (err: any) {
                 if (err) {
                     console.error("Error uploading image to IMGBB:", err?.message || err);

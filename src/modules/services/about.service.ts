@@ -36,6 +36,9 @@ export type AboutDTO = {
     mapUrl?: string | null;
     tiktokUrl?: string | null;
     youtubeUrl?: string | null;
+
+    deleteImageUrl: string | null;
+    isImageChanged: boolean | null;
 };
 
 export type AboutUpdateDTO = Partial<AboutDTO>;
@@ -52,6 +55,7 @@ function mapToEntity(data: Partial<AboutDTO>) {
     return {
         ...(data.slug !== undefined && { slug: data.slug }),
         ...(data.image !== undefined && { image: data.image }),
+        ...(data.deleteImageUrl !== undefined && { delete_image_url: data.deleteImageUrl }),
         ...(data.title !== undefined && { title: data.title }),
         ...(data.description !== undefined && { description: data.description }),
         ...(data.mission !== undefined && { mission: data.mission }),
@@ -179,20 +183,35 @@ export class AboutService {
         const uniqueSlug = await ensureUniqueAboutSlug(desiredSlug, id);
 
         let imgbbResponse: ImgbbResponse | undefined;
-        try {
-            imgbbResponse = await ImgbbService.uploadFromInput(payload.image, file, {
-                fileName: uniqueSlug,
-            });
-        } catch (err: any) {
-            console.error("Error uploading image to IMGBB:", err?.message || err);
-            throw new Error(`IMAGE_UPLOAD_FAILED: ${err?.message || "UNKNOWN"}`);
+        if (payload.isImageChanged && payload.deleteImageUrl) {
+            try {
+                const deletedResponse = await ImgbbService.deleteByDeleteUrl(
+                    payload.deleteImageUrl
+                );
+                imgbbResponse = await ImgbbService.uploadFromInput(payload.image, file, {
+                    fileName: uniqueSlug,
+                });
+            } catch (err: any) {
+                if (err) {
+                    console.error("Error uploading image to IMGBB:", err?.message || err);
+                }
+                throw new Error(`IMAGE_UPLOAD_FAILED: ${err?.message || "UNKNOWN"}`);
+            }
+        }
+
+        let image: string | undefined;
+        let deleteImageUrl: string | undefined;
+        if (imgbbResponse) {
+            image = imgbbResponse?.data?.display_url;
+            deleteImageUrl = imgbbResponse?.data?.delete_url;
         }
 
         const data: Prisma.about_meUpdateInput = {
             ...mapToEntity({
                 ...payload,
                 slug: uniqueSlug,
-                image: imgbbResponse?.data?.display_url ?? payload.image ?? undefined,
+                image: image ?? payload.image ?? undefined,
+                ...(deleteImageUrl !== undefined ? { deleteImageUrl: deleteImageUrl } : {}),
             }),
             updated_at: new Date(),
             updated_by: payload.updatedBy || "system",
