@@ -11,6 +11,7 @@ type CategoryListQuery = {
     categoryType?: string; // hoặc $Enums.category_type nếu có enum
     slug?: string;
     url?: string;
+    level?: number;
     sortBy?: keyof Prisma.categoryOrderByWithRelationInput | "createdAt";
     orderBy?: "asc" | "desc";
     page?: number;
@@ -77,6 +78,7 @@ export class CategoryService {
             categoryType,
             slug,
             url,
+            level,
             sortBy: sort_by = "created_at",
             orderBy: sort_order = "asc",
             page = 1,
@@ -106,6 +108,7 @@ export class CategoryService {
                                       contains: q,
                                       mode: "insensitive",
                                   },
+                                  level: { equals: level },
                               },
                           ],
                       }
@@ -135,6 +138,7 @@ export class CategoryService {
                           },
                       }
                     : {},
+                level != null ? { level: { equals: level } } : {},
             ],
         };
 
