@@ -4,6 +4,8 @@ import prisma from "@config/database";
 import { CategoryDAO } from "@dao/category.dao";
 import { category } from "@prisma/client";
 
+import { CategoryRequestDTO } from "@dto/CategoryRequestDTO";
+
 // (Tuỳ chọn) Khai báo type đầu vào tương tự CourseListQuery
 type CategoryListQuery = {
     q?: string;
@@ -69,6 +71,48 @@ export class CategoryService {
     private categoryDAO: CategoryDAO;
     constructor() {
         this.categoryDAO = new CategoryDAO();
+    }
+
+    static async createCategory(request: CategoryRequestDTO): Promise<category> {
+        const desiredSlug = request.slug || request.name;
+        const uniqueSlug = await ensureUniqueSlug(desiredSlug!);
+        request.slug = uniqueSlug;
+        const data = mapToCategoryEntityCreate(request);
+        try {
+            const newCategory = await prisma.category.create({
+                data,
+            });
+            return newCategory;
+        } catch (err) {
+            if (isCategoryIdConflict(err)) {
+                await resyncCategorySequence();
+                // Retry once after sequence is fixed
+                return prisma.category.create({ data });
+            }
+            throw err;
+        }
+    }
+
+    static async updateCategory(
+        categoryId: number,
+        request: CategoryRequestDTO
+    ): Promise<category | null> {
+        const existingCategory = await prisma.category.findUnique({
+            where: { category_id: categoryId },
+        });
+        if (!existingCategory) {
+            return null;
+        }
+        if (request.slug && request.slug !== existingCategory.slug) {
+            const uniqueSlug = await ensureUniqueSlug(request.slug);
+            request.slug = uniqueSlug;
+        }
+        const data = mapToCategoryEntityUpdate(request);
+        const updatedCategory = await prisma.category.update({
+            where: { category_id: categoryId },
+            data,
+        });
+        return updatedCategory;
     }
 
     static async getCategories(query: CategoryListQuery) {
@@ -294,4 +338,84 @@ export class CategoryService {
         // 6) Nếu không lọc gì: trả toàn bộ roots (mọi type)
         return rootsAll;
     }
+}
+function mapToCategoryEntityCreate(request: CategoryRequestDTO) {
+    const data: Prisma.categoryCreateInput = {
+        name: request.name,
+        slug: request.slug,
+        category_type: request.categoryType,
+        ...(request.icon && { icon: request.icon }),
+        ...(request.description && { description: request.description }),
+        ...(request.parentId !== undefined && { parent_id: request.parentId }),
+        ...(request.metaTitle && { meta_title: request.metaTitle }),
+        ...(request.metaDescription && { meta_description: request.metaDescription }),
+        ...(request.h1Heading && { h1_heading: request.h1Heading }),
+        ...(request.seoContentTop && { seo_content_top: request.seoContentTop }),
+        ...(request.seoContentBottom && { seo_content_bottom: request.seoContentBottom }),
+        ...(request.canonicalUrl && { canonical_url: request.canonicalUrl }),
+        ...(request.noindex !== undefined && { noindex: request.noindex }),
+        ...(request.url && { url: request.url }),
+        ...(request.level !== undefined && { level: request.level }),
+        ...(request.isFeatured !== undefined && { is_featured: request.isFeatured }),
+        ...(request.isDisable !== undefined && { is_disable: request.isDisable }),
+        created_at: new Date(),
+        created_by: "system",
+        version: 1,
+    };
+    return data;
+}
+function mapToCategoryEntityUpdate(request: CategoryRequestDTO) {
+    const data: Prisma.categoryUpdateInput = {
+        name: request.name,
+        slug: request.slug,
+        category_type: request.categoryType,
+        ...(request.icon && { icon: request.icon }),
+        ...(request.description && { description: request.description }),
+        ...(request.parentId !== undefined && { parent_id: request.parentId }),
+        ...(request.metaTitle && { meta_title: request.metaTitle }),
+        ...(request.metaDescription && { meta_description: request.metaDescription }),
+        ...(request.h1Heading && { h1_heading: request.h1Heading }),
+        ...(request.seoContentTop && { seo_content_top: request.seoContentTop }),
+        ...(request.seoContentBottom && { seo_content_bottom: request.seoContentBottom }),
+        ...(request.canonicalUrl && { canonical_url: request.canonicalUrl }),
+        ...(request.noindex !== undefined && { noindex: request.noindex }),
+        ...(request.url && { url: request.url }),
+        ...(request.level !== undefined && { level: request.level }),
+        ...(request.isFeatured !== undefined && { is_featured: request.isFeatured }),
+        ...(request.isDisable !== undefined && { is_disable: request.isDisable }),
+        updated_at: new Date(),
+        updated_by: "system",
+        version: { increment: 1 },
+    };
+    return data;
+}
+async function ensureUniqueSlug(slug: string): Promise<string> {
+    let uniqueSlug = slug;
+    let counter = 1;
+
+    while (await prisma.category.findFirst({ where: { slug: uniqueSlug } })) {
+        uniqueSlug = `${slug}-${counter}`;
+        counter++;
+    }
+
+    return uniqueSlug;
+}
+
+function isCategoryIdConflict(err: unknown): err is Prisma.PrismaClientKnownRequestError {
+    return (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2002" &&
+        Array.isArray(err.meta?.target) &&
+        err.meta.target.includes("category_id")
+    );
+}
+
+async function resyncCategorySequence() {
+    const result = (await prisma.$queryRawUnsafe(
+        "SELECT COALESCE(MAX(category_id), 0) + 1 AS next FROM category"
+    )) as Array<{ next: bigint }>;
+    const nextVal = result?.[0]?.next ?? 1n;
+    await prisma.$queryRawUnsafe(
+        `SELECT setval('category_category_id_seq', ${nextVal.toString()})`
+    );
 }

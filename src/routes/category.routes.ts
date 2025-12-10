@@ -1,8 +1,18 @@
 import { Router } from "express";
 import { CategoryController } from "@controllers/category.controller";
+import { authRole } from "@middlewares/authorization";
+import { Role } from "@enums/role.enum";
 
 const router = Router();
 const categoryController = new CategoryController();
+
+router.post("", authRole([Role.ADMIN]), categoryController.createCategory.bind(categoryController));
+
+router.put(
+    "/:id",
+    authRole([Role.ADMIN]),
+    categoryController.updateCategory.bind(categoryController)
+);
 
 router.get("", categoryController.getCategories.bind(categoryController));
 

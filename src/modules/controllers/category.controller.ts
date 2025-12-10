@@ -7,6 +7,20 @@ export class CategoryController {
     constructor() {
         this.categoryService = new CategoryService();
     }
+
+    async createCategory(req: Request, res: Response) {
+        const categoryData = req.body;
+        const newCategory = await CategoryService.createCategory(categoryData as any);
+        res.status(201).json(camelCaseKeysDeep(newCategory));
+    }
+
+    async updateCategory(req: Request, res: Response) {
+        const categoryId = Number(req.params.id);
+        const categoryData = req.body;
+        const updatedCategory = await CategoryService.updateCategory(categoryId, categoryData);
+        res.json(camelCaseKeysDeep(updatedCategory));
+    }
+
     async getCategories(req: Request, res: Response) {
         const { categoryName, categoryType, slug, url, level, page, pageSize } = req.query;
 
