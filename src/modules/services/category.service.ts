@@ -53,7 +53,7 @@ type MenuNode = {
 };
 
 type CategoryNode = {
-    id: number;
+    categoryId: number;
     name: string | null;
     slug: string | null;
     url: string | null;
@@ -272,7 +272,7 @@ export class CategoryService {
             const id = Number(r.category_id);
             const parentId = r.parent_id == null ? null : Number(r.parent_id);
             byId.set(id, {
-                id,
+                categoryId: id,
                 name: (r as any).name ?? null, // cột "name" trong DB
                 slug: r.slug,
                 url: r.url,
@@ -326,7 +326,7 @@ export class CategoryService {
             const isTypeRoot = (n: CategoryNode) => {
                 if (n.category_type !== categoryType) return false;
                 const pid = n.parent_id;
-                if (pid == null || pid === n.id || !byId.has(pid)) return true;
+                if (pid == null || pid === n.categoryId || !byId.has(pid)) return true;
                 const pNode = byId.get(pid)!;
                 return pNode.category_type !== categoryType;
             };
