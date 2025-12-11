@@ -116,47 +116,58 @@ export class CategoryService {
     }
 
     static async deleteCategory(categoryId: number): Promise<void> {
-        // Collect target category and all of its descendants, then delete them in one query.
-        const categories = await prisma.category.findMany({
-            select: { category_id: true, parent_id: true },
-        });
+        await prisma.$transaction(async (tx) => {
+            // Collect target category and all of its descendants, then delete them in one query.
+            const categories = await tx.category.findMany({
+                select: { category_id: true, parent_id: true },
+            });
 
-        const targetExists = categories.some((c) => c.category_id === categoryId);
-        if (!targetExists) {
-            throw new Error("CATEGORY_NOT_FOUND");
-        }
-
-        const childrenMap = new Map<number, number[]>();
-        for (const c of categories) {
-            const parentId = c.parent_id != null ? Number(c.parent_id) : null;
-            if (parentId != null) {
-                const list = childrenMap.get(parentId) ?? [];
-                list.push(c.category_id);
-                childrenMap.set(parentId, list);
+            const targetExists = categories.some((c) => c.category_id === categoryId);
+            if (!targetExists) {
+                throw new Error("CATEGORY_NOT_FOUND");
             }
-        }
 
-        const toDelete = new Set<number>([categoryId]);
-        const stack: number[] = [categoryId];
-
-        while (stack.length > 0) {
-            const current = stack.pop() as number;
-            const children = childrenMap.get(current) ?? [];
-            for (const childId of children) {
-                if (!toDelete.has(childId)) {
-                    toDelete.add(childId);
-                    stack.push(childId);
+            const childrenMap = new Map<number, number[]>();
+            for (const c of categories) {
+                const parentId = c.parent_id != null ? Number(c.parent_id) : null;
+                if (parentId != null) {
+                    const list = childrenMap.get(parentId) ?? [];
+                    list.push(c.category_id);
+                    childrenMap.set(parentId, list);
                 }
             }
-        }
 
-        try {
-            await prisma.category.deleteMany({
-                where: { category_id: { in: Array.from(toDelete) } },
+            const toDelete = new Set<number>([categoryId]);
+            const stack: number[] = [categoryId];
+
+            while (stack.length > 0) {
+                const current = stack.pop() as number;
+                const children = childrenMap.get(current) ?? [];
+                for (const childId of children) {
+                    if (!toDelete.has(childId)) {
+                        toDelete.add(childId);
+                        stack.push(childId);
+                    }
+                }
+            }
+
+            const idsToDelete = Array.from(toDelete);
+
+            // Remove category links on dependent tables before deleting categories.
+            await tx.course.updateMany({
+                where: { category_id: { in: idsToDelete } },
+                data: { category_id: null },
             });
-        } catch (err: unknown) {
-            throw err;
-        }
+
+            await tx.news.updateMany({
+                where: { category_id: { in: idsToDelete } },
+                data: { category_id: null },
+            });
+
+            await tx.category.deleteMany({
+                where: { category_id: { in: idsToDelete } },
+            });
+        });
     }
 
     static async getCategories(query: CategoryListQuery) {
