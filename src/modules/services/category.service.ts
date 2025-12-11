@@ -343,7 +343,7 @@ function mapToCategoryEntityCreate(request: CategoryRequestDTO) {
     const data: Prisma.categoryCreateInput = {
         name: request.name,
         slug: request.slug,
-        category_type: request.categoryType,
+        category_type: request.categoryType ? request.categoryType.toUpperCase() : "",
         ...(request.icon && { icon: request.icon }),
         ...(request.description && { description: request.description }),
         ...(request.parentId !== undefined && { parent_id: request.parentId }),
@@ -368,7 +368,7 @@ function mapToCategoryEntityUpdate(request: CategoryRequestDTO) {
     const data: Prisma.categoryUpdateInput = {
         name: request.name,
         slug: request.slug,
-        category_type: request.categoryType,
+        category_type: request.categoryType ? request.categoryType.toUpperCase() : "",
         ...(request.icon && { icon: request.icon }),
         ...(request.description && { description: request.description }),
         ...(request.parentId !== undefined && { parent_id: request.parentId }),
