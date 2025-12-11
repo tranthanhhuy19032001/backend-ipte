@@ -21,6 +21,25 @@ export class CategoryController {
         res.json(camelCaseKeysDeep(updatedCategory));
     }
 
+    async deleteCategory(req: Request, res: Response) {
+        const categoryId = Number(req.params.id);
+        if (Number.isNaN(categoryId)) {
+            res.status(400).json({ message: "Invalid category id." });
+            return;
+        }
+
+        try {
+            await CategoryService.deleteCategory(categoryId);
+            res.status(204).end();
+        } catch (error: any) {
+            if (error?.message === "CATEGORY_NOT_FOUND") {
+                res.status(404).json({ message: "Category not found." });
+                return;
+            }
+            res.status(500).json({ message: "Failed to delete category." });
+        }
+    }
+
     async getCategories(req: Request, res: Response) {
         const { categoryName, categoryType, slug, url, level, page, pageSize } = req.query;
 

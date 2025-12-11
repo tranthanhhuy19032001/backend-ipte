@@ -115,6 +115,50 @@ export class CategoryService {
         return updatedCategory;
     }
 
+    static async deleteCategory(categoryId: number): Promise<void> {
+        // Collect target category and all of its descendants, then delete them in one query.
+        const categories = await prisma.category.findMany({
+            select: { category_id: true, parent_id: true },
+        });
+
+        const targetExists = categories.some((c) => c.category_id === categoryId);
+        if (!targetExists) {
+            throw new Error("CATEGORY_NOT_FOUND");
+        }
+
+        const childrenMap = new Map<number, number[]>();
+        for (const c of categories) {
+            const parentId = c.parent_id != null ? Number(c.parent_id) : null;
+            if (parentId != null) {
+                const list = childrenMap.get(parentId) ?? [];
+                list.push(c.category_id);
+                childrenMap.set(parentId, list);
+            }
+        }
+
+        const toDelete = new Set<number>([categoryId]);
+        const stack: number[] = [categoryId];
+
+        while (stack.length > 0) {
+            const current = stack.pop() as number;
+            const children = childrenMap.get(current) ?? [];
+            for (const childId of children) {
+                if (!toDelete.has(childId)) {
+                    toDelete.add(childId);
+                    stack.push(childId);
+                }
+            }
+        }
+
+        try {
+            await prisma.category.deleteMany({
+                where: { category_id: { in: Array.from(toDelete) } },
+            });
+        } catch (err: unknown) {
+            throw err;
+        }
+    }
+
     static async getCategories(query: CategoryListQuery) {
         const {
             q,

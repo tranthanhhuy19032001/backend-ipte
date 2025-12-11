@@ -14,6 +14,12 @@ router.put(
     categoryController.updateCategory.bind(categoryController)
 );
 
+router.delete(
+    "/:id",
+    authRole([Role.ADMIN]),
+    categoryController.deleteCategory.bind(categoryController)
+);
+
 router.get("", categoryController.getCategories.bind(categoryController));
 
 router.get("/header-menu", categoryController.getHeaderMenu.bind(categoryController));
