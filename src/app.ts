@@ -24,6 +24,7 @@ const allowedOrigins = [
     "http://localhost:3000",
     "http://localhost:5173",
     "https://your-frontend.com",
+    "https://admin-pte-ipass-git-main-leminhkhangms-6925s-projects.vercel.app"
 ];
 
 app.use(
