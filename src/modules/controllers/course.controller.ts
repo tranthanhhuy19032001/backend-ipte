@@ -118,6 +118,20 @@ export class CourseController {
         }
     }
 
+    async deleteCourseByIds(req: Request, res: Response) {
+        try {
+            const { ids } = req.body;
+            if (!Array.isArray(ids) || ids.some((id) => typeof id !== "number")) {
+                return res.status(400).json({ message: "Invalid course ids." });
+            }
+
+            await CourseService.deleteCourseByIds(ids);
+            res.status(204).end();
+        } catch (e: any) {
+            return res.status(500).json({ message: "Failed to delete courses." });
+        }
+    }
+
     async getBySlug(req: Request, res: Response) {
         try {
             const slug = req.params.slug;

@@ -189,6 +189,11 @@ router.put(
     courseController.update.bind(courseController)
 );
 router.delete("/:id", authRole([Role.ADMIN]), courseController.remove.bind(courseController));
+router.delete(
+    "/",
+    authRole([Role.ADMIN]),
+    courseController.deleteCourseByIds.bind(courseController)
+);
 
 router.get("/slug/:slug", courseController.getBySlug.bind(courseController));
 

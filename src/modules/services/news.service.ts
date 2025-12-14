@@ -210,6 +210,24 @@ export class NewsService {
     async deleteNews(id: number): Promise<news> {
         return this.newsDAO.delete(id);
     }
+
+    async deleteNewsByIds(ids: number[]): Promise<void> {
+        try {
+            const news = await prisma.news.findMany({
+                where: { news_id: { in: ids } },
+                select: { news_id: true, image: true, delete_image_url: true },
+            });
+            for (const n of news) {
+                if (n.delete_image_url) {
+                    await ImgbbService.deleteByDeleteUrl(n.delete_image_url);
+                }
+            }
+
+            await this.newsDAO.deleteByIds(ids);
+        } catch (e: any) {
+            throw e;
+        }
+    }
 }
 
 function normalizeCreateInput(input: SeoEvaluationInput) {

@@ -13,5 +13,6 @@ router.post("/", upload.single("file"), newsController.createNews.bind(newsContr
 router.get("/:id", newsController.getNewsById.bind(newsController));
 router.put("/:id", upload.single("file"), newsController.updateNews.bind(newsController));
 router.delete("/:id", newsController.deleteNews.bind(newsController));
+router.delete("/", newsController.deleteNewsByIds.bind(newsController));
 
 export default router;

@@ -1,7 +1,6 @@
 import prisma from "@config/database";
 import { $Enums, Prisma } from "@prisma/client";
 import slugify from "slugify";
-import { deleteImage } from "@utils/imageHandler";
 import { SeoEvaluationInput } from "@dto/SeoEvaluationInput";
 import { ImgbbResponse } from "@services/imgbb.service";
 import { ImgbbService } from "@services/imgbb.service";
@@ -326,16 +325,37 @@ export class CourseService {
         try {
             const course = await prisma.course.findUnique({
                 where: { course_id: courseId },
-                select: { image: true },
+                select: { image: true, delete_image_url: true },
             });
+            if (!course) throw new Error("COURSE_NOT_FOUND");
 
-            if (course?.image && course.image.startsWith("/storage")) {
-                deleteImage(course.image);
+            if (course.delete_image_url) {
+                await ImgbbService.deleteByDeleteUrl(course.delete_image_url);
             }
 
             await prisma.course.delete({ where: { course_id: courseId } });
         } catch (e: any) {
             if (e?.code === "P2025") throw new Error("COURSE_NOT_FOUND");
+            throw e;
+        }
+    }
+
+    static async deleteCourseByIds(courseIds: number[]) {
+        try {
+            const courses = await prisma.course.findMany({
+                where: { course_id: { in: courseIds } },
+                select: { course_id: true, image: true, delete_image_url: true },
+            });
+            for (const course of courses) {
+                if (course.delete_image_url) {
+                    await ImgbbService.deleteByDeleteUrl(course.delete_image_url);
+                }
+            }
+
+            await prisma.course.deleteMany({
+                where: { course_id: { in: courseIds } },
+            });
+        } catch (e: any) {
             throw e;
         }
     }

@@ -85,6 +85,12 @@ export class NewsDAO {
         });
     }
 
+    async deleteByIds(ids: number[]): Promise<void> {
+        await prisma.news.deleteMany({
+            where: { news_id: { in: ids } },
+        });
+    }
+
     async findAllNews(filters: {
         search?: string;
         title?: string;

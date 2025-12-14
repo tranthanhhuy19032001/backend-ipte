@@ -38,11 +38,19 @@ export class TeacherDAO {
         });
     }
 
+    async deleteByIds(ids: number[]): Promise<void> {
+        await prisma.teacher.deleteMany({
+            where: { teacher_id: { in: ids } },
+        });
+    }
+
     async findWithFilters(filters: {
         name?: string;
+        slug?: string;
         overallScore?: number;
         listeningScore?: number;
         speakingScore?: number;
+        readingScore?: number;
         writingScore?: number;
         page: number;
         pageSize: number;
@@ -61,6 +69,12 @@ export class TeacherDAO {
                 mode: "insensitive",
             };
         }
+        if (filters.slug) {
+            whereClause.slug = {
+                contains: filters.slug,
+                mode: "insensitive",
+            };
+        }
         if (filters.overallScore !== undefined) {
             whereClause.overall_score = filters.overallScore;
         }
@@ -69,6 +83,9 @@ export class TeacherDAO {
         }
         if (filters.speakingScore !== undefined) {
             whereClause.speaking_score = filters.speakingScore;
+        }
+        if (filters.readingScore !== undefined) {
+            whereClause.reading_score = filters.readingScore;
         }
         if (filters.writingScore !== undefined) {
             whereClause.writing_score = filters.writingScore;
