@@ -373,7 +373,6 @@ model teacher {
   content          String?
   delete_image_url String?
   seo_score        Int?
-  user             user?     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model user {
@@ -405,7 +404,6 @@ model user {
   knowledge            knowledge[]
   news                 news[]
   student              student?
-  teacher              teacher[]
   user_role            user_role[]
 }
 

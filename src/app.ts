@@ -2,6 +2,7 @@
 import cors from "cors";
 import path from "path";
 
+import { config } from "@config/index";
 import { setupSwagger } from "@config/swagger";
 import errorHandler from "@middlewares/errorHandler";
 
@@ -20,12 +21,7 @@ import commentRoutes from "@routes/comment.router";
 
 const app: Express = express();
 
-const allowedOrigins = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "https://your-frontend.com",
-    "https://admin-pte-ipass-git-main-leminhkhangms-6925s-projects.vercel.app"
-];
+const allowedOrigins = config.CORS_ALLOWED_ORIGINS;
 
 app.use(
     cors({

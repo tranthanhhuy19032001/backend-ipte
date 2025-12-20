@@ -8,4 +8,7 @@ export const config = {
     domain: process.env.DOMAIN || "http://localhost:4000",
     IMGBB_API_KEY: process.env.IMGBB_API_KEY || "",
     IMGBB_URL_UPLOAD: process.env.IMGBB_URL_UPLOAD || "",
+    CORS_ALLOWED_ORIGINS: process.env.CORS_ALLOWED_ORIGINS
+        ? process.env.CORS_ALLOWED_ORIGINS.split(",")
+        : ["http://localhost:3000"],
 };
