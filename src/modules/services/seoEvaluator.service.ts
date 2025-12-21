@@ -19,24 +19,7 @@ export interface SeoEvaluationResult {
 }
 
 export async function evaluateSeo(data: SeoEvaluationInput): Promise<SeoEvaluationResult> {
-    const {
-        title,
-        slug,
-        description,
-        content,
-        metaTitle,
-        metaDescription,
-        keywords = [],
-        audience = [],
-        benefits,
-        schemaEnabled,
-        schemaMode,
-        schemaData,
-        duration,
-        startDate,
-        endDate,
-        tuition,
-    } = data;
+    const { content } = data;
 
     const prompt = `
 You are an expert SEO content auditor for an English language center website.
@@ -56,36 +39,18 @@ Your job:
 }
 
 Scoring criteria (0–100):
-- Title & meta title: keyword usage, length, clarity, enticing.
-- Meta description: keyword usage, length (120–160 chars), click-worthy.
-- Slug: readable, uses keywords, hyphenated.
-- Headings & content (HTML in "content"): keyword placement, readability, internal structure (H1–H2), no keyword stuffing.
-- Use of target keywords (keywords[]).
-- Audience clarity & benefits (audience, benefits, description).
-- Basic on-page SEO best practices (no need to check technical SEO like page speed).
-- Optional bonuses: structured data (schemaEnabled, schemaMode, schemaData).
+- Content relevance to English learning (30 points)
+- Keyword usage and optimization (25 points)
+- Readability and structure (20 points)
+- Meta tags and descriptions (15 points)
+- Mobile-friendliness and loading speed (10 points)
 
 Target audience: students/parents looking for English courses.
 
-Here is the raw object (some fields may be null):
+Here is the content object to evaluate:
 
 {
-  "title": ${JSON.stringify(title)},
-  "slug": ${JSON.stringify(slug)},
-  "description": ${JSON.stringify(description)},
-  "content": ${JSON.stringify(content)},
-  "metaTitle": ${JSON.stringify(metaTitle)},
-  "metaDescription": ${JSON.stringify(metaDescription)},
-  "keywords": ${JSON.stringify(keywords)},
-  "audience": ${JSON.stringify(audience)},
-  "benefits": ${JSON.stringify(benefits)},
-  "schemaEnabled": ${JSON.stringify(schemaEnabled)},
-  "schemaMode": ${JSON.stringify(schemaMode)},
-  "schemaData": ${JSON.stringify(schemaData)},
-  "duration": ${JSON.stringify(duration)},
-  "startDate": ${JSON.stringify(startDate)},
-  "endDate": ${JSON.stringify(endDate)},
-  "tuition": ${JSON.stringify(tuition)}
+  "content": ${JSON.stringify(content)}
 }
 
 IMPORTANT:

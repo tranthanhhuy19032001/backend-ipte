@@ -2,44 +2,8 @@ import prisma from "@config/database";
 import { Prisma } from "@prisma/client";
 import slugify from "slugify";
 import { ImgbbResponse, ImgbbService } from "@services/imgbb.service";
-
-export type AboutDTO = {
-    aboutId?: number;
-
-    slug?: string;
-    image?: string | null;
-    title?: string;
-    description?: string | null;
-
-    mission?: string | null;
-    vision?: string | null;
-
-    email?: string | null;
-    phone?: string | null;
-    hotline?: string | null;
-
-    website?: string | null;
-    address?: string | null;
-
-    facebookUrl?: string | null;
-    zaloUrl?: string | null;
-
-    createdAt?: string;
-    updatedAt?: string;
-
-    createdBy?: string | null;
-    updatedBy?: string | null;
-
-    version?: number;
-    category?: string | null;
-
-    mapUrl?: string | null;
-    tiktokUrl?: string | null;
-    youtubeUrl?: string | null;
-
-    deleteImageUrl: string | null;
-    isImageChanged: boolean | null;
-};
+import { AboutDTO } from "@dto/AboutDTO";
+import { BranchDTO, mapToBranchDTO } from "@dto/BranchDTO";
 
 export type AboutUpdateDTO = Partial<AboutDTO>;
 
@@ -51,7 +15,7 @@ export type AboutListQuery = {
     aboutId?: number;
 };
 
-function mapToEntity(data: Partial<AboutDTO>) {
+function mapToEntity(data: any): any {
     return {
         ...(data.slug !== undefined && { slug: data.slug }),
         ...(data.image !== undefined && { image: data.image }),
@@ -78,8 +42,8 @@ function buildAboutWhere(
     q?: string,
     category?: string,
     about_id?: number
-): Prisma.about_meWhereInput {
-    const orConditions: Prisma.about_meWhereInput[] = [];
+): Prisma.about_branchWhereInput {
+    const orConditions: Prisma.about_branchWhereInput[] = [];
 
     if (q && q.trim() !== "") {
         const keyword = q.trim();
@@ -91,7 +55,7 @@ function buildAboutWhere(
 
         const numericId = Number(keyword);
         if (!Number.isNaN(numericId)) {
-            orConditions.push({ about_id: numericId });
+            orConditions.push({ about_branch_id: numericId });
         }
     }
 
@@ -102,10 +66,10 @@ function buildAboutWhere(
     }
 
     if (about_id !== undefined) {
-        orConditions.push({ about_id });
+        orConditions.push({ about_branch_id: about_id });
     }
 
-    const where: Prisma.about_meWhereInput = {};
+    const where: Prisma.about_branchWhereInput = {};
     if (orConditions.length > 0) {
         where.OR = orConditions;
     }
@@ -129,7 +93,7 @@ export class AboutService {
             throw new Error(`IMAGE_UPLOAD_FAILED: ${err?.message || "UNKNOWN"}`);
         }
 
-        const data: Prisma.about_meCreateInput = {
+        const data: Prisma.about_branchCreateInput = {
             ...mapToEntity({
                 ...payload,
                 slug: uniqueSlug,
@@ -141,12 +105,12 @@ export class AboutService {
             version: payload.version ?? 1,
         };
 
-        const created = await prisma.about_me.create({ data });
+        const created = await prisma.about_branch.create({ data });
         return created;
     }
 
     static async getById(id: number) {
-        const found = await prisma.about_me.findUnique({ where: { about_id: id } });
+        const found = await prisma.about_branch.findUnique({ where: { about_branch_id: id } });
         if (!found) throw new Error("ABOUT_NOT_FOUND");
         return found;
     }
@@ -160,8 +124,8 @@ export class AboutService {
         const take = page_size;
 
         const [items, total] = await Promise.all([
-            prisma.about_me.findMany({ where, skip, take }),
-            prisma.about_me.count({ where }),
+            prisma.about_branch.findMany({ where, skip, take }),
+            prisma.about_branch.count({ where }),
         ]);
 
         return {
@@ -174,7 +138,7 @@ export class AboutService {
     }
 
     static async update(id: number, payload: Partial<AboutDTO>, file?: Express.Multer.File) {
-        const found = await prisma.about_me.findUnique({ where: { about_id: id } });
+        const found = await prisma.about_branch.findUnique({ where: { about_branch_id: id } });
         if (!found) throw new Error("ABOUT_NOT_FOUND");
 
         const slugSource = payload.slug ?? payload.title ?? found.slug ?? found.title ?? "about";
@@ -206,7 +170,7 @@ export class AboutService {
             deleteImageUrl = imgbbResponse?.data?.delete_url;
         }
 
-        const data: Prisma.about_meUpdateInput = {
+        const data: Prisma.about_branchUpdateInput = {
             ...mapToEntity({
                 ...payload,
                 slug: uniqueSlug,
@@ -218,32 +182,32 @@ export class AboutService {
             version: { increment: 1 },
         };
 
-        const updated = await prisma.about_me.update({
-            where: { about_id: id },
+        const updated = await prisma.about_branch.update({
+            where: { about_branch_id: id },
             data,
         });
         return updated;
     }
 
     static async remove(id: number) {
-        const found = await prisma.about_me.findUnique({ where: { about_id: id } });
+        const found = await prisma.about_branch.findUnique({ where: { about_branch_id: id } });
         if (!found) throw new Error("ABOUT_NOT_FOUND");
-        return prisma.about_me.delete({ where: { about_id: id } });
+        return prisma.about_branch.delete({ where: { about_branch_id: id } });
     }
 
     static async listByCategory(category?: string) {
-        const items = await prisma.about_me.findMany({
+        const items = await prisma.about_branch.findMany({
             where: category ? { category } : {},
         });
         return items;
     }
 
     static async getBySlug(slug: string) {
-        const item = await prisma.about_me.findFirst({ where: { slug } });
+        const item = await prisma.about_branch.findFirst({ where: { slug } });
         return item;
     }
     static async getByCategory(category: string) {
-        const item = await prisma.about_me.findFirst({ where: { category } });
+        const item = await prisma.about_branch.findFirst({ where: { category } });
         return item;
     }
 }
@@ -253,12 +217,12 @@ async function ensureUniqueAboutSlug(base: string, aboutIdToExclude?: number): P
     let candidate = baseSlug;
     let i = 1;
     while (true) {
-        const found = await prisma.about_me.findFirst({
+        const found = await prisma.about_branch.findFirst({
             where: {
                 slug: candidate,
-                ...(aboutIdToExclude ? { about_id: { not: aboutIdToExclude } } : {}),
+                ...(aboutIdToExclude ? { about_branch_id: { not: aboutIdToExclude } } : {}),
             },
-            select: { about_id: true },
+            select: { about_branch_id: true },
         });
         if (!found) return candidate;
         i += 1;

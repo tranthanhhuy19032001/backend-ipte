@@ -7,9 +7,9 @@ export class GeminiController {
         try {
             const data = req.body as SeoEvaluationInput;
 
-            if (!data || !data.title || !data.slug) {
+            if (!data || !data.content) {
                 res.status(400).json({
-                    error: "Missing required fields: title, slug",
+                    error: "Missing required fields: content",
                 });
                 return;
             }

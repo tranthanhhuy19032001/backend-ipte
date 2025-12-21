@@ -41,7 +41,8 @@ export class CategoryController {
     }
 
     async getCategories(req: Request, res: Response) {
-        const { categoryName, categoryType, slug, url, level, page, pageSize } = req.query;
+        const { categoryName, categoryType, slug, url, level, parentId, page, pageSize } =
+            req.query;
 
         const categories = await CategoryService.getCategories({
             categoryName: categoryName as string | undefined,
@@ -49,6 +50,7 @@ export class CategoryController {
             slug: slug as string | undefined,
             url: url as string | undefined,
             level: level ? Number(level) : undefined,
+            parentId: parentId ? Number(parentId) : undefined,
             page: page ? Number(page) : undefined,
             pageSize: pageSize ? Number(pageSize) : undefined,
         });

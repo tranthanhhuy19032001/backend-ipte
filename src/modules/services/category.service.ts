@@ -14,6 +14,7 @@ type CategoryListQuery = {
     slug?: string;
     url?: string;
     level?: number;
+    parentId?: number;
     sortBy?: keyof Prisma.categoryOrderByWithRelationInput | "createdAt";
     orderBy?: "asc" | "desc";
     page?: number;
@@ -178,6 +179,7 @@ export class CategoryService {
             slug,
             url,
             level,
+            parentId,
             sortBy: sort_by = "created_at",
             orderBy: sort_order = "asc",
             page = 1,
@@ -238,6 +240,7 @@ export class CategoryService {
                       }
                     : {},
                 level != null ? { level: { equals: level } } : {},
+                parentId != null ? { parent_id: { equals: parentId } } : {},
             ],
         };
 

@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
-import { AboutDTO, AboutService } from "@services/about.service";
+import { AboutService } from "@services/about.service";
 import { camelCaseKeysDeep } from "@utils/response";
 import { parseJsonField } from "@utils/requestParser";
+import { AboutDTO } from "@dto/AboutDTO";
+import { BranchDTO } from "@dto/BranchDTO";
 
 export class AboutController {
     async create(req: Request, res: Response) {
