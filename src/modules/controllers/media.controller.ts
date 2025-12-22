@@ -30,7 +30,7 @@ export class MediaController {
             return res.status(400).json({ message: "Invalid request payload." });
         }
         try {
-            const updated = await MediaService.updateFacility(id, payload, req.file);
+            const updated = await MediaService.updateFacilityOrReviews(id, payload, req.file);
             res.json(camelCaseKeysDeep(updated));
         } catch (e: any) {
             if (e?.message === "FACILITY_NOT_FOUND")
@@ -79,5 +79,47 @@ export class MediaController {
             res.status(500).json({ message: "Failed to retrieve videos." });
         }
     }
-    
+
+    async createReviews(req: Request, res: Response) {
+        let payload: Partial<FacilityDTO>;
+        try {
+            payload = parseJsonField<Partial<FacilityDTO>>(req);
+        } catch {
+            return res.status(400).json({ message: "Invalid request payload." });
+        }
+        try {
+            const created = await MediaService.createReviews(payload, req.file);
+            res.status(201).json(camelCaseKeysDeep(created));
+        } catch (e) {
+            res.status(500).json({ message: "Failed to create facility." });
+        }
+    }
+
+    async updateReviews(req: Request, res: Response) {
+        const id = Number(req.params.id);
+        if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid facility_id." });
+        let payload: Partial<FacilityDTO>;
+        try {
+            payload = parseJsonField<Partial<FacilityDTO>>(req);
+        } catch {
+            return res.status(400).json({ message: "Invalid request payload." });
+        }
+        try {
+            const updated = await MediaService.updateFacilityOrReviews(id, payload, req.file);
+            res.json(camelCaseKeysDeep(updated));
+        } catch (e: any) {
+            if (e?.message === "FACILITY_NOT_FOUND")
+                return res.status(404).json({ message: "Facility not found." });
+            res.status(500).json({ message: "Failed to update facility." });
+        }
+    }
+    async listReviews(req: Request, res: Response) {
+        try {
+            const facilities = await MediaService.listReviews();
+            res.json(camelCaseKeysDeep(facilities));
+        } catch (e) {
+            res.status(500).json({ message: "Failed to retrieve facilities." });
+        }
+    }
+
 }

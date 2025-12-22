@@ -35,7 +35,7 @@ export class MediaService {
         return mapFromMediaToFacilityDTO(created);
     }
 
-    static async updateFacility(id: number, payload: Partial<FacilityDTO>, file?: Express.Multer.File) {
+    static async updateFacilityOrReviews(id: number, payload: Partial<FacilityDTO>, file?: Express.Multer.File) {
         const existing = await prisma.media.findUnique({ where: { media_id: id } });
         if (!existing) throw new Error("FACILITY_NOT_FOUND");
 
@@ -112,5 +112,39 @@ export class MediaService {
             orderBy: { created_at: 'desc' },
         });
         return videos.map(mapFromMediaToVideoDTO);
+    }
+
+    static async createReviews(payload: Partial<FacilityDTO>, file?: Express.Multer.File) {
+        let imgbbResponse: ImgbbResponse | undefined;
+        try {
+            imgbbResponse = await ImgbbService.uploadFromInput(payload.imageName, file);
+        } catch (err: any) {
+            console.error("Error uploading image to IMGBB:", err?.message || err);
+            throw new Error(`IMAGE_UPLOAD_FAILED: ${err?.message || "UNKNOWN"}`);
+        }
+
+        const data: Prisma.mediaCreateInput = {
+            title: payload.title || "",
+            description: payload.description || null,
+            image_name: file?.originalname || null,
+            image_url: imgbbResponse?.data?.display_url ?? payload.imageUrl ?? null,
+            media_type: 'REVIEWS',
+            delete_image_url: imgbbResponse?.data?.delete_url ?? null,
+            created_at: new Date(),
+            created_by: payload.createdBy || "system",
+            updated_by: payload.updatedBy || "system",
+            version: 1,
+        };
+
+        const created = await prisma.media.create({ data });
+        return mapFromMediaToFacilityDTO(created);
+    }
+
+    static async listReviews() {
+        const facilities = await prisma.media.findMany({
+            where: { media_type: 'REVIEWS' },
+            orderBy: { created_at: 'desc' },
+        });
+        return facilities.map(mapFromMediaToFacilityDTO);
     }
 }

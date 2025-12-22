@@ -39,119 +39,48 @@ model comment {
   @@index([parent_comment_id], map: "idx_comment_parent")
 }
 
-model commitment {
-  commitment_id  Int       @id @default(autoincrement())
-  title          String    @db.VarChar(255)
-  content        String?
-  is_active      Boolean?  @default(true)
-  priority       Int?      @default(0)
-  course_id      Int?
-  effective_from DateTime? @db.Date
-  effective_to   DateTime? @db.Date
-  created_at     DateTime? @default(now()) @db.Timestamp(6)
-  updated_at     DateTime? @default(now()) @db.Timestamp(6)
-  created_by     String?   @db.VarChar(50)
-  updated_by     String?   @db.VarChar(50)
-  version        Int?      @default(1)
-  course         course?   @relation(fields: [course_id], references: [course_id], onUpdate: NoAction)
-
-  @@index([is_active], map: "idx_commitment_active")
-  @@index([course_id], map: "idx_commitment_course")
-}
-
-model consultation_request {
-  consultation_request_id Int             @id @default(autoincrement())
-  full_name               String          @db.VarChar(255)
-  email                   String          @db.VarChar(255)
-  phone                   String?         @db.VarChar(30)
-  course_id               Int?
-  message                 String?
-  contact_method          contact_method?
-  status                  consult_status  @default(PENDING)
-  preferred_time          DateTime?       @db.Timestamp(6)
-  source                  String?         @db.VarChar(50)
-  assigned_to             Int?
-  created_at              DateTime?       @default(now()) @db.Timestamp(6)
-  updated_at              DateTime?       @default(now()) @db.Timestamp(6)
-  created_by              String?         @db.VarChar(50)
-  updated_by              String?         @db.VarChar(50)
-  version                 Int?            @default(1)
-  user                    user?           @relation(fields: [assigned_to], references: [user_id], onUpdate: NoAction)
-  course                  course?         @relation(fields: [course_id], references: [course_id], onUpdate: NoAction)
-
-  @@index([course_id], map: "idx_consult_course")
-  @@index([status], map: "idx_consult_status")
-}
-
 model course {
-  course_id            Int                    @id @default(autoincrement())
-  course_code          String?                @unique @db.VarChar(50)
-  course_name          String                 @db.VarChar(255)
-  slug                 String?                @unique @db.VarChar(255)
-  title                String?
-  description          String?
-  level                course_level           @default(BEGINNER)
-  mode                 course_mode            @default(ONLINE)
-  language             String?                @default("en") @db.VarChar(50)
-  price                Decimal?               @default(0) @db.Decimal(12, 2)
-  duration             String?                @db.VarChar(255)
-  start_date           DateTime?              @db.Date
-  end_date             DateTime?              @db.Date
-  image                String?
-  created_at           DateTime?              @default(now()) @db.Timestamp(6)
-  updated_at           DateTime?              @default(now()) @db.Timestamp(6)
-  created_by           String?                @db.VarChar(50)
-  updated_by           String?                @db.VarChar(50)
-  version              Int?                   @default(1)
-  category             course_category?
-  schedule             String?                @db.VarChar(255)
-  tuition              String?                @db.VarChar(255)
-  content              String?
-  category_id          Int?
-  is_featured          Boolean?               @default(false)
-  is_disabled          Boolean?               @default(false)
-  meta_title           String?
-  meta_description     String?
-  audience             String[]               @default([])
-  keywords             String[]               @default([])
-  schema_enabled       Boolean?               @default(false)
-  schema_mode          String?                @db.VarChar(50)
-  schema_data          String?
-  benefits             String?
-  seo_score            Int?
-  delete_image_url     String?
-  comment              comment[]
-  commitment           commitment[]
-  consultation_request consultation_request[]
-  enrollment           enrollment[]
-  review               review[]
+  course_id        Int              @id @default(autoincrement())
+  course_code      String?          @unique @db.VarChar(50)
+  course_name      String           @db.VarChar(255)
+  slug             String?          @unique @db.VarChar(255)
+  title            String?
+  description      String?
+  level            course_level     @default(BEGINNER)
+  mode             course_mode      @default(ONLINE)
+  language         String?          @default("en") @db.VarChar(50)
+  price            Decimal?         @default(0) @db.Decimal(12, 2)
+  duration         String?          @db.VarChar(255)
+  start_date       DateTime?        @db.Date
+  end_date         DateTime?        @db.Date
+  image            String?
+  created_at       DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at       DateTime?        @default(now()) @db.Timestamp(6)
+  created_by       String?          @db.VarChar(50)
+  updated_by       String?          @db.VarChar(50)
+  version          Int?             @default(1)
+  category         course_category?
+  schedule         String?          @db.VarChar(255)
+  tuition          String?          @db.VarChar(255)
+  content          String?
+  category_id      Int?
+  is_featured      Boolean?         @default(false)
+  is_disabled      Boolean?         @default(false)
+  meta_title       String?
+  meta_description String?
+  audience         String[]         @default([])
+  keywords         String[]         @default([])
+  schema_enabled   Boolean?         @default(false)
+  schema_mode      String?          @db.VarChar(50)
+  schema_data      String?
+  benefits         String?
+  seo_score        Int?
+  delete_image_url String?
+  comment          comment[]
 
   @@index([level], map: "idx_course_level")
   @@index([mode], map: "idx_course_mode")
   @@index([slug], map: "idx_course_slug")
-}
-
-model enrollment {
-  enrollment_id  Int               @id @default(autoincrement())
-  student_id     Int
-  course_id      Int
-  status         enrollment_status @default(REGISTERED)
-  payment_status payment_status    @default(UNPAID)
-  payment_amount Decimal?          @default(0) @db.Decimal(12, 2)
-  registered_at  DateTime?         @default(now()) @db.Timestamp(6)
-  started_at     DateTime?         @db.Timestamp(6)
-  completed_at   DateTime?         @db.Timestamp(6)
-  created_at     DateTime?         @default(now()) @db.Timestamp(6)
-  updated_at     DateTime?         @default(now()) @db.Timestamp(6)
-  created_by     String?           @db.VarChar(50)
-  updated_by     String?           @db.VarChar(50)
-  version        Int?              @default(1)
-  course         course            @relation(fields: [course_id], references: [course_id], onDelete: Cascade, onUpdate: NoAction)
-  student        student           @relation(fields: [student_id], references: [student_id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@unique([student_id, course_id], map: "uq_enrollment")
-  @@index([course_id], map: "idx_enrollment_course")
-  @@index([student_id], map: "idx_enrollment_student")
 }
 
 model knowledge {
@@ -246,28 +175,6 @@ model refresh_token {
   version         Int?      @default(1)
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model review {
-  review_id   Int       @id @default(autoincrement())
-  course_id   Int
-  student_id  Int
-  rating      Int       @db.SmallInt
-  title       String?   @db.VarChar(255)
-  content     String?
-  is_approved Boolean?  @default(false)
-  created_at  DateTime? @default(now()) @db.Timestamp(6)
-  updated_at  DateTime? @default(now()) @db.Timestamp(6)
-  created_by  String?   @db.VarChar(50)
-  updated_by  String?   @db.VarChar(50)
-  version     Int?      @default(1)
-  course      course    @relation(fields: [course_id], references: [course_id], onDelete: Cascade, onUpdate: NoAction)
-  student     student   @relation(fields: [student_id], references: [student_id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@unique([student_id, course_id], map: "uq_review")
-  @@index([course_id], map: "idx_review_course")
-  @@index([student_id], map: "idx_review_student")
-}
-
 model role {
   role_id          Int               @id @default(autoincrement())
   role_name        String            @unique @db.VarChar(50)
@@ -296,23 +203,21 @@ model role_permission {
 }
 
 model student {
-  student_id Int          @id @default(autoincrement())
-  user_id    Int?         @unique
-  phone      String?      @db.VarChar(30)
-  dob        DateTime?    @db.Date
+  student_id Int       @id @default(autoincrement())
+  user_id    Int?      @unique
+  phone      String?   @db.VarChar(30)
+  dob        DateTime? @db.Date
   address    String?
   note       String?
-  created_at DateTime?    @default(now()) @db.Timestamp(6)
-  updated_at DateTime?    @default(now()) @db.Timestamp(6)
-  created_by String?      @db.VarChar(50)
-  updated_by String?      @db.VarChar(50)
-  version    Int?         @default(1)
-  full_name  String       @db.VarChar(255)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @db.Timestamp(6)
+  created_by String?   @db.VarChar(50)
+  updated_by String?   @db.VarChar(50)
+  version    Int?      @default(1)
+  full_name  String    @db.VarChar(255)
   course_id  Int?
-  slug       String       @db.VarChar(255)
-  enrollment enrollment[]
-  review     review[]
-  user       user?        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  slug       String    @db.VarChar(255)
+  user       user?     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model tag {
@@ -350,35 +255,34 @@ model teacher {
 }
 
 model user {
-  user_id              Int                    @id @default(autoincrement())
-  username             String                 @unique @db.VarChar(50)
-  password             String                 @db.VarChar(255)
-  email                String                 @unique @db.VarChar(100)
-  full_name            String?                @db.VarChar(100)
-  created_at           DateTime?              @default(now()) @db.Timestamp(6)
-  updated_at           DateTime?              @default(now()) @db.Timestamp(6)
-  created_by           String?                @db.VarChar(50)
-  updated_by           String?                @db.VarChar(50)
-  version              Int?                   @default(1)
-  avatar               String?                @db.VarChar(50)
-  is_active            Boolean?               @default(true)
-  teacher_id           Int?
-  bio                  String?                @db.VarChar(128)
-  name                 String?                @db.VarChar(50)
-  image                String?                @db.VarChar(50)
-  overall_score        Float?                 @db.Real
-  listening_score      Float?                 @db.Real
-  speaking_score       Float?                 @db.Real
-  reading_score        Float?                 @db.Real
-  writing_score        Float?                 @db.Real
-  slug                 String?                @db.VarChar(50)
-  address              String?
-  comment              comment[]
-  consultation_request consultation_request[]
-  knowledge            knowledge[]
-  news                 news[]
-  student              student?
-  user_role            user_role[]
+  user_id         Int         @id @default(autoincrement())
+  username        String      @unique @db.VarChar(50)
+  password        String      @db.VarChar(255)
+  email           String      @unique @db.VarChar(100)
+  full_name       String?     @db.VarChar(100)
+  created_at      DateTime?   @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?   @default(now()) @db.Timestamp(6)
+  created_by      String?     @db.VarChar(50)
+  updated_by      String?     @db.VarChar(50)
+  version         Int?        @default(1)
+  avatar          String?     @db.VarChar(50)
+  is_active       Boolean?    @default(true)
+  teacher_id      Int?
+  bio             String?     @db.VarChar(128)
+  name            String?     @db.VarChar(50)
+  image           String?     @db.VarChar(50)
+  overall_score   Float?      @db.Real
+  listening_score Float?      @db.Real
+  speaking_score  Float?      @db.Real
+  reading_score   Float?      @db.Real
+  writing_score   Float?      @db.Real
+  slug            String?     @db.VarChar(50)
+  address         String?
+  comment         comment[]
+  knowledge       knowledge[]
+  news            news[]
+  student         student?
+  user_role       user_role[]
 }
 
 model user_role {
@@ -465,12 +369,20 @@ model media {
   version          Int?      @default(1)
 }
 
-enum consult_status {
-  PENDING
-  CONTACTED
-  SCHEDULED
-  CLOSED
-  CONVERTED
+model consultation {
+  consultation_id Int       @id @default(autoincrement())
+  name            String    @db.VarChar(255)
+  email           String    @db.VarChar(255)
+  phone           String?   @db.VarChar(30)
+  course_id       Int?
+  message         String?
+  status          String    @default("NEW") @db.VarChar(50)
+  created_at      DateTime? @default(now()) @db.Timestamp(6)
+  updated_at      DateTime? @default(now()) @db.Timestamp(6)
+  created_by      String?   @db.VarChar(50)
+  updated_by      String?   @db.VarChar(50)
+  version         Int?      @default(1)
+  target_score    String?   @db.VarChar(255)
 }
 
 enum contact_method {

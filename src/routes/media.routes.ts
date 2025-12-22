@@ -23,6 +23,20 @@ router.put(
 router.get("/facilities", mediaController.listFacilities.bind(mediaController));
 
 router.post(
+    "/reviews",
+    authRole([Role.ADMIN]),
+    upload.single("file"),
+    mediaController.createReviews.bind(mediaController)
+);
+router.put(
+    "/reviews/:id",
+    authRole([Role.ADMIN]),
+    upload.single("file"),
+    mediaController.updateReviews.bind(mediaController)
+);
+router.get("/reviews", mediaController.listReviews.bind(mediaController));
+
+router.post(
     "/videos",
     authRole([Role.ADMIN]),
     mediaController.createVideo.bind(mediaController)
