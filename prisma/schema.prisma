@@ -448,6 +448,23 @@ model about_branch {
   delete_image_url String?
 }
 
+model media {
+  media_id         Int       @id @default(autoincrement())
+  title            String?
+  description      String?
+  image_name       String?   @db.VarChar(255)
+  delete_image_url String?
+  image_url        String?
+  video_url        String?
+  is_disable       Boolean?  @default(false)
+  media_type       String?   @db.VarChar(255)
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @default(now()) @db.Timestamp(6)
+  created_by       String?   @db.VarChar(50)
+  updated_by       String?   @db.VarChar(50)
+  version          Int?      @default(1)
+}
+
 enum consult_status {
   PENDING
   CONTACTED
