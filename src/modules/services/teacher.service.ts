@@ -139,7 +139,7 @@ export class TeacherService {
         const uniqueSlug = await ensureUniqueTeacherSlug(desiredSlug, id);
 
         let imgbbResponse: ImgbbResponse | undefined;
-        if (input.isImageChanged) {
+        if (input.isImageChanged && file) {
             try {
                 imgbbResponse = await ImgbbService.uploadFromInput(null, file, {
                     fileName: uniqueSlug,
@@ -160,8 +160,8 @@ export class TeacherService {
         const data = normalizeUpdateInput({
             ...input,
             slug: uniqueSlug,
-            ...(image !== undefined ? { image } : {}),
-            ...(deleteImageUrl !== undefined ? { deleteImageUrl } : {}),
+            image: image ?? existing.image,
+            deleteImageUrl: deleteImageUrl ?? existing.delete_image_url,
         });
 
         try {

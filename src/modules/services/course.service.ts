@@ -284,7 +284,7 @@ export class CourseService {
         }
 
         let imgbbResponse: ImgbbResponse | undefined;
-        if (input.isImageChanged) {
+        if (input.isImageChanged && file) {
             try {
                 imgbbResponse = await ImgbbService.uploadFromInput(null, file, {
                     fileName: input.slug || input.title,
@@ -306,8 +306,8 @@ export class CourseService {
 
         const normalizedData = normalizeUpdateInput({
             ...input,
-            ...(image !== undefined ? { image: image } : {}),
-            ...(deleteImageUrl !== undefined ? { deleteImageUrl: deleteImageUrl } : {}),
+            image: image ?? entity.image,
+            deleteImageUrl: deleteImageUrl ?? entity.delete_image_url,
         });
 
         try {

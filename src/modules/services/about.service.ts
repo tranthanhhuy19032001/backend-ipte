@@ -148,7 +148,7 @@ export class AboutService {
         const uniqueSlug = await ensureUniqueAboutSlug(desiredSlug, id);
 
         let imgbbResponse: ImgbbResponse | undefined;
-        if (payload.isImageChanged) {
+        if (payload.isImageChanged && file) {
             try {
                 imgbbResponse = await ImgbbService.uploadFromInput(null, file, {
                     fileName: uniqueSlug,
@@ -172,8 +172,8 @@ export class AboutService {
             ...mapToEntity({
                 ...payload,
                 slug: uniqueSlug,
-                image: image ?? payload.image ?? undefined,
-                ...(deleteImageUrl !== undefined ? { deleteImageUrl: deleteImageUrl } : {}),
+                image: image ?? found.image,
+                ...(deleteImageUrl !== undefined && { deleteImageUrl: deleteImageUrl }),
             }),
             updated_at: new Date(),
             updated_by: payload.updatedBy || "system",

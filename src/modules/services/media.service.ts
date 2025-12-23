@@ -40,7 +40,7 @@ export class MediaService {
         if (!existing) throw new Error("FACILITY_NOT_FOUND");
 
         let imgbbResponse: ImgbbResponse | undefined;
-        if (payload.isImageChanged) {
+        if (payload.isImageChanged && file) {
             try {
                 imgbbResponse = await ImgbbService.uploadFromInput(null, file);
             } catch (err: any) {
@@ -55,8 +55,8 @@ export class MediaService {
             title: payload.title,
             description: payload.description,
             image_name: file?.originalname,
-            image_url: imgbbResponse?.data?.display_url,
-            delete_image_url: imgbbResponse?.data?.delete_url,
+            image_url: imgbbResponse?.data?.display_url || existing.image_url,
+            delete_image_url: imgbbResponse?.data?.delete_url || existing.delete_image_url,
             updated_at: new Date(),
             updated_by: payload.updatedBy || existing.updated_by,
             version: (existing.version || 1) + 1,
