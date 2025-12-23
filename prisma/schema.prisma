@@ -390,6 +390,27 @@ model deleted_image {
   delete_image_url String
 }
 
+model banner {
+  banner_id        Int       @id @default(autoincrement())
+  title            String    @db.VarChar(255)
+  sub_title        String    @db.VarChar(255)
+  placement        String    @db.VarChar(255)
+  image            String?
+  delete_image_url String?
+  action_type      String    @db.VarChar(255)
+  action_label     String    @db.VarChar(255)
+  is_active        Boolean?  @default(true)
+  order            Int?
+  start_date       DateTime? @db.Date
+  end_date         DateTime? @db.Date
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @default(now()) @db.Timestamp(6)
+  created_by       String?   @db.VarChar(50)
+  updated_by       String?   @db.VarChar(50)
+  version          Int?      @default(1)
+  action_url       String?   @db.VarChar(255)
+}
+
 enum contact_method {
   PHONE
   EMAIL

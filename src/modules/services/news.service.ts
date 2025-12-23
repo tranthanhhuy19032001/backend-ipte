@@ -1,12 +1,11 @@
 import { NewsDAO, NewsWithAuthorAndCategory, NewsWithAuthorName } from "@dao/news.dao";
 import { KnowledgeDAO } from "@dao/knowledge.dao";
-import { news, deleted_image } from "@prisma/client";
+import { Prisma, news } from "@prisma/client";
 import slugify from "slugify";
 import prisma from "@config/database";
 import { SeoEvaluationInput } from "@dto/SeoEvaluationInput";
-import { Prisma } from "@prisma/client";
-import { ImgbbResponse } from "@services/imgbb.service";
-import { ImgbbService } from "@services/imgbb.service";
+import { ImgbbResponse, ImgbbService } from "@services/imgbb.service";
+import { DeletedImageDAO } from "@dao/deletedImage.dao";
 
 type newsJoinedKnowledge = {
     news: {
@@ -31,17 +30,6 @@ type newsJoinedKnowledge = {
     }[];
 };
 
-type NewsJoined = {
-    id: number;
-    image: string;
-    title: string;
-    description: string;
-    content: string;
-    category: string | null;
-    authorName: string | null;
-    authorAvatar: string | null;
-};
-
 type NewsResponse = Omit<
     NewsWithAuthorAndCategory,
     "author_id" | "author_name" | "category_type"
@@ -53,10 +41,12 @@ type NewsResponse = Omit<
 export class NewsService {
     private newsDAO: NewsDAO;
     private knowledgeDAO: KnowledgeDAO;
+    private deletedImageDAO: DeletedImageDAO;
 
     constructor() {
         this.newsDAO = new NewsDAO();
         this.knowledgeDAO = new KnowledgeDAO();
+        this.deletedImageDAO = new DeletedImageDAO();
     }
 
     async getNewsById(id: number): Promise<NewsResponse | null> {
@@ -201,7 +191,9 @@ export class NewsService {
         });
 
         try {
-            await prisma.deleted_image.create({ data: { delete_image_url: entity?.delete_image_url || "" } });
+            if (entity?.delete_image_url) {
+                await this.deletedImageDAO.create(entity.delete_image_url);
+            }
             return await this.newsDAO.update(id, normalizedData);
         } catch (e: any) {
             if (e?.code === "P2025") {
@@ -212,6 +204,13 @@ export class NewsService {
     }
 
     async deleteNews(id: number): Promise<news> {
+        const entity =  await this.newsDAO.findById(id);
+        if (!entity) {
+            throw new Error("NEWS_NOT_FOUND");
+        }
+        if (entity.delete_image_url) {
+            await this.deletedImageDAO.create(entity.delete_image_url);
+        }
         return this.newsDAO.delete(id);
     }
 
@@ -223,7 +222,7 @@ export class NewsService {
             });
             for (const n of news) {
                 if (n.delete_image_url) {
-                    await ImgbbService.deleteByDeleteUrl(n.delete_image_url);
+                    await this.deletedImageDAO.create(n.delete_image_url);
                 }
             }
 

@@ -2,8 +2,8 @@ import prisma from "@config/database";
 import { $Enums, Prisma } from "@prisma/client";
 import slugify from "slugify";
 import { SeoEvaluationInput } from "@dto/SeoEvaluationInput";
-import { ImgbbResponse } from "@services/imgbb.service";
-import { ImgbbService } from "@services/imgbb.service";
+import { ImgbbResponse, ImgbbService } from "@services/imgbb.service";
+import { DeletedImageDAO } from "@dao/deletedImage.dao";
 
 export type CourseUpdateDTO = Partial<SeoEvaluationInput>;
 
@@ -311,7 +311,9 @@ export class CourseService {
         });
 
         try {
-            await prisma.deleted_image.create({ data: { delete_image_url: entity?.delete_image_url || "" } });
+            if (entity?.delete_image_url) {
+                await new DeletedImageDAO().create(entity.delete_image_url);
+            }
             const updated = await prisma.course.update({
                 where: { course_id: courseId },
                 data: normalizedData,
@@ -333,7 +335,7 @@ export class CourseService {
             if (!course) throw new Error("COURSE_NOT_FOUND");
 
             if (course.delete_image_url) {
-                await ImgbbService.deleteByDeleteUrl(course.delete_image_url);
+                await new DeletedImageDAO().create(course.delete_image_url);
             }
 
             await prisma.course.delete({ where: { course_id: courseId } });
@@ -351,7 +353,7 @@ export class CourseService {
             });
             for (const course of courses) {
                 if (course.delete_image_url) {
-                    await ImgbbService.deleteByDeleteUrl(course.delete_image_url);
+                    await new DeletedImageDAO().create(course.delete_image_url);
                 }
             }
 

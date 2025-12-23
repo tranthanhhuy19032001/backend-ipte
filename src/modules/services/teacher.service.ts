@@ -4,6 +4,7 @@ import { AboutService } from "@services/about.service";
 import slugify from "slugify";
 import prisma from "@config/database";
 import { ImgbbResponse, ImgbbService } from "@services/imgbb.service";
+import { DeletedImageDAO } from "@dao/deletedImage.dao";
 
 type TeacherResponse = {
     features: {
@@ -44,9 +45,11 @@ export type TeacherPayload = {
 
 export class TeacherService {
     private teacherDAO: TeacherDAO;
+    private deletedImageDAO: DeletedImageDAO;
 
     constructor() {
         this.teacherDAO = new TeacherDAO();
+        this.deletedImageDAO = new DeletedImageDAO();
     }
 
     async getTeacherById(id: number): Promise<teacher> {
@@ -165,7 +168,9 @@ export class TeacherService {
         });
 
         try {
-            await prisma.deleted_image.create({ data: { delete_image_url: existing.delete_image_url || "" } });
+            if (existing.delete_image_url) {
+                await this.deletedImageDAO.create(existing.delete_image_url);
+            }
             return await this.teacherDAO.update(id, data);
         } catch (e: any) {
             if (e?.code === "P2025") {
@@ -185,7 +190,7 @@ export class TeacherService {
         }
 
         if (teacher.delete_image_url) {
-            await ImgbbService.deleteByDeleteUrl(teacher.delete_image_url);
+            await this.deletedImageDAO.create(teacher.delete_image_url);
         }
 
         try {
@@ -206,7 +211,7 @@ export class TeacherService {
 
         for (const teacher of teachers) {
             if (teacher.delete_image_url) {
-                await ImgbbService.deleteByDeleteUrl(teacher.delete_image_url);
+                await this.deletedImageDAO.create(teacher.delete_image_url);
             }
         }
 

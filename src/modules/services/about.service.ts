@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import slugify from "slugify";
 import { ImgbbResponse, ImgbbService } from "@services/imgbb.service";
 import { AboutDTO } from "@dto/AboutDTO";
-import { BranchDTO, mapToBranchDTO } from "@dto/BranchDTO";
+import { DeletedImageDAO } from "@dao/deletedImage.dao";
 
 export type AboutUpdateDTO = Partial<AboutDTO>;
 
@@ -184,12 +184,18 @@ export class AboutService {
             where: { about_branch_id: id },
             data,
         });
+        if (found.delete_image_url) {
+            await new DeletedImageDAO().create(found.delete_image_url || "");
+        }
         return updated;
     }
 
     static async remove(id: number) {
         const found = await prisma.about_branch.findUnique({ where: { about_branch_id: id } });
         if (!found) throw new Error("ABOUT_NOT_FOUND");
+        if (found.delete_image_url) {
+            await new DeletedImageDAO().create(found.delete_image_url || "");
+        }
         return prisma.about_branch.delete({ where: { about_branch_id: id } });
     }
 
