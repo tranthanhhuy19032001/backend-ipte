@@ -15,6 +15,7 @@ export type BannerResponse = {
     actionType: string;
     actionLabel: string;
     actionUrl: string | null;
+    categoryId: number;
     isActive: boolean | null;
     order: number | null;
     startAt: Date | null;
@@ -41,6 +42,7 @@ export class BannerService {
         isActive?: boolean;
         startAt?: string;
         endAt?: string;
+        categoryId?: number;
         page: number;
         pageSize: number;
     }): Promise<{
@@ -56,6 +58,7 @@ export class BannerService {
             isActive: filters.isActive,
             startDate: toDateOrNull(filters.startAt),
             endDate: toDateOrNull(filters.endAt),
+            categoryId: filters.categoryId,
             page: filters.page,
             pageSize: filters.pageSize,
         });
@@ -182,6 +185,7 @@ function toBannerResponse(entity: banner): BannerResponse {
         actionType: entity.action_type,
         actionLabel: entity.action_label,
         actionUrl: entity.action_url ?? null,
+        categoryId: entity.category_id,
         isActive: entity.is_active ?? null,
         order: entity.order ?? null,
         startAt: entity.start_date ?? null,
@@ -206,6 +210,7 @@ function normalizeCreateInput(
         title: input.title,
         sub_title: input.subtitle,
         placement: input.placement,
+        category: { connect: { category_id: input.categoryId } },
         action_type: input.actionType,
         action_label: input.actionLabel,
         ...(input.actionUrl && { action_url: input.actionUrl }),
@@ -249,6 +254,9 @@ function normalizeUpdateInput(
 
     if (input.image !== undefined) data.image = input.image;
     if (input.deleteImageUrl !== undefined) data.delete_image_url = input.deleteImageUrl;
+    if (input.categoryId !== undefined) {
+        data.category = { connect: { category_id: input.categoryId } };
+    }
 
     return data;
 }

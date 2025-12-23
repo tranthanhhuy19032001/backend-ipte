@@ -323,6 +323,7 @@ model category {
   created_by         String?   @db.VarChar(50)
   updated_by         String?   @db.VarChar(50)
   version            Int?      @default(1)
+  banner             banner[]
 }
 
 model about_branch {
@@ -409,6 +410,8 @@ model banner {
   updated_by       String?   @db.VarChar(50)
   version          Int?      @default(1)
   action_url       String?   @db.VarChar(255)
+  category_id      Int
+  category         category  @relation(fields: [category_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_banner_category")
 }
 
 enum contact_method {

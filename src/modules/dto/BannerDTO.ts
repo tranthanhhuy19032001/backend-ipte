@@ -15,4 +15,5 @@ export interface BannerDTO {
     isImageChanged?: boolean | null;
     createdBy?: string | null;
     updatedBy?: string | null;
+    categoryId: number;
 }

@@ -8,6 +8,7 @@ export type BannerFilters = {
     isActive?: boolean;
     startDate?: Date | null;
     endDate?: Date | null;
+    categoryId?: number;
     page: number;
     pageSize: number;
 };
@@ -26,7 +27,7 @@ export class BannerDAO {
         total: number;
         total_pages: number;
     }> {
-        const { search, placement, isActive, startDate, endDate, page, pageSize } = filters;
+        const { search, placement, isActive, startDate, endDate, categoryId, page, pageSize } = filters;
         const whereClause: Prisma.bannerWhereInput = {};
 
         if (search) {
@@ -50,6 +51,9 @@ export class BannerDAO {
         }
         if (endDate) {
             whereClause.end_date = { lte: endDate };
+        }
+        if (categoryId) {
+            whereClause.category_id = categoryId;
         }
 
         const skip = (page - 1) * pageSize;
