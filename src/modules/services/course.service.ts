@@ -111,7 +111,7 @@ export class CourseService {
 
         let imgbbResponse: ImgbbResponse | undefined;
         try {
-            imgbbResponse = await ImgbbService.uploadFromInput(input.image, file, {
+            imgbbResponse = await ImgbbService.uploadFromInput(null, file, {
                 fileName: uniqueSlug,
             });
         } catch (err: any) {
@@ -273,6 +273,10 @@ export class CourseService {
         input: CourseUpdateDTO,
         file?: Express.Multer.File
     ) {
+        const entity = await this.getCourseById(courseId);
+        if (!entity) {
+            throw new Error("COURSE_NOT_FOUND");
+        }
         if (input.slug || input.title) {
             const base = input.slug || input.title!;
             const uniqueSlug = await ensureUniqueSlug(base, courseId);
@@ -280,11 +284,9 @@ export class CourseService {
         }
 
         let imgbbResponse: ImgbbResponse | undefined;
-        if (input.isImageChanged && input.deleteImageUrl) {
+        if (input.isImageChanged) {
             try {
-                const deletedResponse = await ImgbbService.deleteByDeleteUrl(input.deleteImageUrl);
-
-                imgbbResponse = await ImgbbService.uploadFromInput(input.image, file, {
+                imgbbResponse = await ImgbbService.uploadFromInput(null, file, {
                     fileName: input.slug || input.title,
                 });
             } catch (err: any) {
@@ -309,6 +311,7 @@ export class CourseService {
         });
 
         try {
+            await prisma.deleted_image.create({ data: { delete_image_url: entity?.delete_image_url || "" } });
             const updated = await prisma.course.update({
                 where: { course_id: courseId },
                 data: normalizedData,

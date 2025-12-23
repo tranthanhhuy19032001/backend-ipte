@@ -385,6 +385,11 @@ model consultation {
   target_score    String?   @db.VarChar(255)
 }
 
+model deleted_image {
+  deleted_image_id Int    @id @default(autoincrement())
+  delete_image_url String
+}
+
 enum contact_method {
   PHONE
   EMAIL

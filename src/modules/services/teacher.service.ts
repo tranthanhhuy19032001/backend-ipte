@@ -93,7 +93,7 @@ export class TeacherService {
 
         let imgbbResponse: ImgbbResponse | undefined;
         try {
-            imgbbResponse = await ImgbbService.uploadFromInput(input.image, file, {
+            imgbbResponse = await ImgbbService.uploadFromInput(null, file, {
                 fileName: uniqueSlug,
             });
         } catch (e: any) {
@@ -139,12 +139,9 @@ export class TeacherService {
         const uniqueSlug = await ensureUniqueTeacherSlug(desiredSlug, id);
 
         let imgbbResponse: ImgbbResponse | undefined;
-        if (input.isImageChanged && (input.image || file || input.deleteImageUrl)) {
+        if (input.isImageChanged) {
             try {
-                if (input.deleteImageUrl) {
-                    await ImgbbService.deleteByDeleteUrl(input.deleteImageUrl);
-                }
-                imgbbResponse = await ImgbbService.uploadFromInput(input.image, file, {
+                imgbbResponse = await ImgbbService.uploadFromInput(null, file, {
                     fileName: uniqueSlug,
                 });
             } catch (e: any) {
@@ -168,6 +165,7 @@ export class TeacherService {
         });
 
         try {
+            await prisma.deleted_image.create({ data: { delete_image_url: existing.delete_image_url || "" } });
             return await this.teacherDAO.update(id, data);
         } catch (e: any) {
             if (e?.code === "P2025") {

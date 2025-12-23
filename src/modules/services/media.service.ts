@@ -12,7 +12,7 @@ export class MediaService {
     static async createFacility(payload: Partial<FacilityDTO>, file?: Express.Multer.File) {
         let imgbbResponse: ImgbbResponse | undefined;
         try {
-            imgbbResponse = await ImgbbService.uploadFromInput(payload.imageName, file);
+            imgbbResponse = await ImgbbService.uploadFromInput(null, file);
         } catch (err: any) {
             console.error("Error uploading image to IMGBB:", err?.message || err);
             throw new Error(`IMAGE_UPLOAD_FAILED: ${err?.message || "UNKNOWN"}`);
@@ -40,11 +40,8 @@ export class MediaService {
         if (!existing) throw new Error("FACILITY_NOT_FOUND");
 
         let imgbbResponse: ImgbbResponse | undefined;
-        if (payload.isImageChanged && payload.deleteImageUrl === existing.delete_image_url && payload.deleteImageUrl) {
+        if (payload.isImageChanged) {
             try {
-                const deletedResponse = await ImgbbService.deleteByDeleteUrl(
-                    payload.deleteImageUrl
-                );
                 imgbbResponse = await ImgbbService.uploadFromInput(null, file);
             } catch (err: any) {
                 if (err) {
@@ -64,6 +61,7 @@ export class MediaService {
             updated_by: payload.updatedBy || existing.updated_by,
             version: (existing.version || 1) + 1,
         };
+        await prisma.deleted_image.create({ data: { delete_image_url: existing.delete_image_url || "" } });
         const updated = await prisma.media.update({ where: { media_id: id }, data });
         return mapFromMediaToFacilityDTO(updated);
     }

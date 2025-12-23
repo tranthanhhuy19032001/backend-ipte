@@ -1,6 +1,6 @@
 import { NewsDAO, NewsWithAuthorAndCategory, NewsWithAuthorName } from "@dao/news.dao";
 import { KnowledgeDAO } from "@dao/knowledge.dao";
-import { news } from "@prisma/client";
+import { news, deleted_image } from "@prisma/client";
 import slugify from "slugify";
 import prisma from "@config/database";
 import { SeoEvaluationInput } from "@dto/SeoEvaluationInput";
@@ -121,7 +121,7 @@ export class NewsService {
 
         let imgbbResponse: ImgbbResponse | undefined;
         try {
-            imgbbResponse = await ImgbbService.uploadFromInput(input.image, file, {
+            imgbbResponse = await ImgbbService.uploadFromInput(null, file, {
                 fileName: uniqueSlug,
             });
         } catch (err: any) {
@@ -160,6 +160,12 @@ export class NewsService {
         data: Partial<SeoEvaluationInput>,
         file?: Express.Multer.File
     ): Promise<news> {
+
+        const entity =  await this.newsDAO.findById(id);
+        if (!entity) {
+            throw new Error("NEWS_NOT_FOUND");
+        }
+
         const payload: Partial<SeoEvaluationInput> = { ...data };
 
         if (payload.slug || payload.title) {
@@ -168,12 +174,9 @@ export class NewsService {
         }
 
         let imgbbResponse: ImgbbResponse | undefined;
-        if (payload.isImageChanged && payload.deleteImageUrl) {
+        if (payload.isImageChanged) {
             try {
-                const deletedResponse = await ImgbbService.deleteByDeleteUrl(
-                    payload.deleteImageUrl
-                );
-                imgbbResponse = await ImgbbService.uploadFromInput(payload.image, file, {
+                imgbbResponse = await ImgbbService.uploadFromInput(null, file, {
                     fileName: payload.slug || payload.title,
                 });
             } catch (err: any) {
@@ -198,6 +201,7 @@ export class NewsService {
         });
 
         try {
+            await prisma.deleted_image.create({ data: { delete_image_url: entity?.delete_image_url || "" } });
             return await this.newsDAO.update(id, normalizedData);
         } catch (e: any) {
             if (e?.code === "P2025") {

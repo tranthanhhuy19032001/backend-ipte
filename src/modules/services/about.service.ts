@@ -85,7 +85,7 @@ export class AboutService {
 
         let imgbbResponse: ImgbbResponse | undefined;
         try {
-            imgbbResponse = await ImgbbService.uploadFromInput(payload.image, file, {
+            imgbbResponse = await ImgbbService.uploadFromInput(null, file, {
                 fileName: uniqueSlug,
             });
         } catch (err: any) {
@@ -98,6 +98,7 @@ export class AboutService {
                 ...payload,
                 slug: uniqueSlug,
                 image: imgbbResponse?.data?.display_url ?? payload.image ?? null,
+                deleteImageUrl: imgbbResponse?.data?.delete_url ?? payload.deleteImageUrl ?? null,
             }),
             slug: uniqueSlug,
             created_by: payload.createdBy || "system",
@@ -147,12 +148,9 @@ export class AboutService {
         const uniqueSlug = await ensureUniqueAboutSlug(desiredSlug, id);
 
         let imgbbResponse: ImgbbResponse | undefined;
-        if (payload.isImageChanged && payload.deleteImageUrl) {
+        if (payload.isImageChanged) {
             try {
-                const deletedResponse = await ImgbbService.deleteByDeleteUrl(
-                    payload.deleteImageUrl
-                );
-                imgbbResponse = await ImgbbService.uploadFromInput(payload.image, file, {
+                imgbbResponse = await ImgbbService.uploadFromInput(null, file, {
                     fileName: uniqueSlug,
                 });
             } catch (err: any) {
