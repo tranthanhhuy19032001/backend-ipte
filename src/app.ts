@@ -22,6 +22,7 @@ import geminiRoutes from "@routes/gemini.routers";
 import commentRoutes from "@routes/comment.router";
 import mediaRoutes from "@routes/media.routes";
 import consultationRotes from "@routes/consultation.routes";
+import mailRoutes from "@routes/mail.routes";
 
 const app: Express = express();
 
@@ -54,6 +55,7 @@ app.use("/api/gemini", geminiRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/media", mediaRoutes);
 app.use("/api/consultations", consultationRotes);
+app.use("/api/mail", mailRoutes);
 app.use(errorHandler);
 
 app.get("/", (_req, res) => {
