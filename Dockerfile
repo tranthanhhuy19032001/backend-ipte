@@ -1,47 +1,31 @@
 # syntax=docker/dockerfile:1
 ARG NODE_VERSION=22.17.0
 
-FROM node:${NODE_VERSION}-bookworm-slim AS base
-WORKDIR /usr/src/app
+# Single environment for build + runtime
+FROM node:${NODE_VERSION}-bookworm-slim
 
-# deps
-FROM base AS deps
-RUN apt-get update && apt-get install -y \
+# App directory and runtime config
+WORKDIR /usr/src/app
+ENV PORT=4000
+
+# System packages needed for node-gyp/Prisma
+RUN apt-get update && apt-get install -y --no-install-recommends \
   openssl ca-certificates python3 make g++ \
   && rm -rf /var/lib/apt/lists/*
+
+# Install JS dependencies
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 
-# build
-FROM deps AS build
+# Copy sources and build, then prune dev deps
 COPY . .
-RUN npm run prisma:generate
-RUN npm run build
+RUN npm run prisma:generate \
+  && npm run build \
+  && npm prune --omit=dev \
+  && rm -rf ~/.npm /tmp/*
 
-# prod-deps
-FROM base AS prod-deps
-RUN apt-get update && apt-get install -y \
-  openssl ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --ignore-scripts
-
-# final
-FROM base AS final
-WORKDIR /usr/src/app
+# Drop privileges for runtime
 ENV NODE_ENV=production
-ENV PORT=4000
-
-RUN apt-get update && apt-get install -y \
-  openssl ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
-
-COPY --from=prod-deps /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=build /usr/src/app/prisma ./prisma
-COPY --from=build /usr/src/app/dist ./dist
-COPY --from=build /usr/src/app/package.json ./package.json
-
 RUN useradd -m nodeuser && chown -R nodeuser:nodeuser /usr/src/app
 USER nodeuser
 
