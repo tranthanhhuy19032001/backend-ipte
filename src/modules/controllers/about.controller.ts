@@ -3,7 +3,6 @@ import { AboutService } from "@services/about.service";
 import { camelCaseKeysDeep } from "@utils/response";
 import { parseJsonField } from "@utils/requestParser";
 import { AboutDTO } from "@dto/AboutDTO";
-import { BranchDTO } from "@dto/BranchDTO";
 
 export class AboutController {
     async create(req: Request, res: Response) {
@@ -36,13 +35,13 @@ export class AboutController {
 
     async list(req: Request, res: Response) {
         try {
-            const { q, category, page, page_size, about_id } = req.query;
+            const { q, category, categoryType, page, page_size, about_id, aboutId } = req.query;
             const result = await AboutService.list({
-                category: category as string | undefined,
+                categoryType: (categoryType ?? category) as string | undefined,
                 q: q as string | undefined,
                 page: page ? Number(page) : undefined,
                 page_size: page_size ? Number(page_size) : undefined,
-                about_id: about_id ? Number(about_id) : undefined,
+                aboutId: aboutId ? Number(aboutId) : about_id ? Number(about_id) : undefined,
             });
             res.json(camelCaseKeysDeep(result));
         } catch {
@@ -83,13 +82,18 @@ export class AboutController {
     }
 
     async getDetail(req: Request, res: Response) {
-        const { slug, category } = req.query;
+        const { slug, category, categoryType } = req.query;
         let found;
         try {
             if (slug) {
-                found = await AboutService.getBySlug(slug as string);
+                found = await AboutService.getBySlug(
+                    slug as string,
+                    (categoryType ?? category) as string | undefined
+                );
             } else {
-                found = await AboutService.getByCategory(category as string);
+                found = await AboutService.getByCategory(
+                    (categoryType ?? category) as string | undefined
+                );
             }
             if (!found) return res.status(404).json({ message: "About not found." });
             res.json(camelCaseKeysDeep(found));

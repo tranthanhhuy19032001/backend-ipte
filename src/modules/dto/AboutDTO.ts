@@ -1,23 +1,16 @@
 export type AboutDTO = {
     aboutId?: number;
 
+    categoryType?: string | null;
+
     slug?: string;
     image?: string | null;
     title?: string;
     description?: string | null;
+    content?: string | null;
 
     mission?: string | null;
     vision?: string | null;
-
-    email?: string | null;
-    phone?: string | null;
-    hotline?: string | null;
-
-    website?: string | null;
-    address?: string | null;
-
-    facebookUrl?: string | null;
-    zaloUrl?: string | null;
 
     createdAt?: string;
     updatedAt?: string;
@@ -26,12 +19,32 @@ export type AboutDTO = {
     updatedBy?: string | null;
 
     version?: number;
-    category?: string | null;
 
-    mapUrl?: string | null;
-    tiktokUrl?: string | null;
-    youtubeUrl?: string | null;
+    deleteImageUrl?: string | null;
+    isImageChanged?: boolean | null;
+    isImageChage?: boolean | null;
 
-    deleteImageUrl: string | null;
-    isImageChanged: boolean | null;
+    video?: string | null;
 };
+
+export function mapToAboutDTO(entity: any): AboutDTO {
+    const description = entity.description ?? null;
+    return {
+        aboutId: entity.information_id,
+        categoryType: entity.category_type,
+        slug: entity.slug,
+        image: entity.image,
+        title: entity.title,
+        description,
+        content: description,
+        mission: entity.mission,
+        vision: entity.vision,
+        deleteImageUrl: entity.delete_image_url ?? null,
+        video: entity.video ?? null,
+        createdAt: entity.created_at ? entity.created_at.toISOString() : undefined,
+        updatedAt: entity.updated_at ? entity.updated_at.toISOString() : undefined,
+        createdBy: entity.created_by,
+        updatedBy: entity.updated_by,
+        version: entity.version,
+    };
+}

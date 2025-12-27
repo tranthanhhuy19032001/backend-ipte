@@ -35,9 +35,9 @@ export class BranchController {
 
     async list(req: Request, res: Response) {
         try {
-            const { q, category, page, page_size } = req.query;
+            const { q, category, categoryType, page, page_size } = req.query;
             const result = await BranchService.list({
-                category: category as string | undefined,
+                categoryType: (categoryType ?? category) as string | undefined,
                 q: q as string | undefined,
                 page: page ? Number(page) : undefined,
                 page_size: page_size ? Number(page_size) : undefined,
