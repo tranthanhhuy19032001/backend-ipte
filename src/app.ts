@@ -61,7 +61,7 @@ app.use("/api/mail", mailRoutes);
 app.use(errorHandler);
 
 app.get("/", (_req, res) => {
-    res.send("Welcome to the IPTE Backend API");
+    res.send("Welcome to the IPTE Backend API (NODEJS)");
 });
 (BigInt.prototype as any).toJSON = function () {
     return Number(this);
