@@ -2,124 +2,83 @@ import { Request, Response } from "express";
 import { MediaService } from "@services/media.service";
 import { camelCaseKeysDeep } from "@utils/response";
 import { parseJsonField } from "@utils/requestParser";
-import { FacilityDTO } from "@dto/MediaDTO";
+import { MediaDTO } from "@dto/MediaDTO";
 
 export class MediaController {
-    async createFacility(req: Request, res: Response) {
-        let payload: Partial<FacilityDTO>;
+    async createMedia(req: Request, res: Response) {
+        let payload: Partial<MediaDTO>;
         try {
-            payload = parseJsonField<Partial<FacilityDTO>>(req);
+            payload = parseJsonField<Partial<MediaDTO>>(req);
         } catch {
             return res.status(400).json({ message: "Invalid request payload." });
         }
         try {
-            const created = await MediaService.createFacility(payload, req.file);
+            const created = await MediaService.createMedia(payload, req.file);
             res.status(201).json(camelCaseKeysDeep(created));
         } catch (e) {
-            res.status(500).json({ message: "Failed to create facility." });
+            res.status(500).json({ message: "Failed to create media." });
         }
     }
 
-    async updateFacility(req: Request, res: Response) {
+    async updateMedia(req: Request, res: Response) {
         const id = Number(req.params.id);
-        if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid facility_id." });
-        let payload: Partial<FacilityDTO>;
+        if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid media_id." });
+        let payload: Partial<MediaDTO>;
         try {
-            payload = parseJsonField<Partial<FacilityDTO>>(req);
+            payload = parseJsonField<Partial<MediaDTO>>(req);
         } catch {
             return res.status(400).json({ message: "Invalid request payload." });
         }
         try {
-            const updated = await MediaService.updateFacilityOrReviews(id, payload, req.file);
+            const updated = await MediaService.updateMedia(id, payload, req.file);
             res.json(camelCaseKeysDeep(updated));
         } catch (e: any) {
-            if (e?.message === "FACILITY_NOT_FOUND")
-                return res.status(404).json({ message: "Facility not found." });
-            res.status(500).json({ message: "Failed to update facility." });
+            if (e?.message === "MEDIA_NOT_FOUND")
+                return res.status(404).json({ message: "Media not found." });
+            res.status(500).json({ message: "Failed to update media." });
         }
     }
-    async listFacilities(req: Request, res: Response) {
+    async listMedia(req: Request, res: Response) {
         try {
-            const facilities = await MediaService.listFacilities();
-            res.json(camelCaseKeysDeep(facilities));
+            const page = Math.max(1, Number(req.query.page) || 1);
+            const pageSize = Math.max(1, Math.min(Number(req.query.page_size) || 15, 100));
+            const { categoryId, categoryType, mediaType, isDisabled, search } = req.query;
+            const medias = await MediaService.listMedia({
+                categoryId: categoryId ? Number(categoryId) : undefined,
+                categoryType: categoryType as string | undefined,
+                mediaType: mediaType as string | undefined,
+                isDisabled: isDisabled ? Boolean(isDisabled) : undefined,
+                search: search as string | undefined,
+                page,
+                pageSize,
+            });
+            res.json(medias);
         } catch (e) {
-            res.status(500).json({ message: "Failed to retrieve facilities." });
+            res.status(500).json({ message: "Failed to retrieve media." });
         }
     }
 
-    async createVideo(req: Request, res: Response) {
-        const payload = req.body;
-        try {
-            const created = await MediaService.createVideo(payload);
-            res.status(201).json(camelCaseKeysDeep(created));
-        } catch (e) {
-            res.status(500).json({ message: "Failed to create video." });
-        }
-    }
-
-    async updateVideo(req: Request, res: Response) {
+    async getMediaById(req: Request, res: Response) {
         const id = Number(req.params.id);
-        if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid video_id." });
-        const payload = req.body;
+        if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid media_id." });
         try {
-            const updated = await MediaService.updateVideo(id, payload);
-            res.json(camelCaseKeysDeep(updated));
-        } catch (e: any) {
-            if (e?.message === "VIDEO_NOT_FOUND")
-                return res.status(404).json({ message: "Video not found." });
-            res.status(500).json({ message: "Failed to update video." });
-        }
-    }
-
-    async listVideos(req: Request, res: Response) {
-        try {
-            const videos = await MediaService.listVideos();
-            res.json(camelCaseKeysDeep(videos));
+            const facility = await MediaService.getMediaById(id);
+            if (!facility) return res.status(404).json({ message: "Facility not found." });
+            res.json(facility);
         } catch (e) {
-            res.status(500).json({ message: "Failed to retrieve videos." });
+            res.status(500).json({ message: "Failed to retrieve facility." });
         }
     }
-
-    async createReviews(req: Request, res: Response) {
-        let payload: Partial<FacilityDTO>;
-        try {
-            payload = parseJsonField<Partial<FacilityDTO>>(req);
-        } catch {
-            return res.status(400).json({ message: "Invalid request payload." });
-        }
-        try {
-            const created = await MediaService.createReviews(payload, req.file);
-            res.status(201).json(camelCaseKeysDeep(created));
-        } catch (e) {
-            res.status(500).json({ message: "Failed to create facility." });
-        }
-    }
-
-    async updateReviews(req: Request, res: Response) {
+    async deleteMedia(req: Request, res: Response) {
         const id = Number(req.params.id);
-        if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid facility_id." });
-        let payload: Partial<FacilityDTO>;
+        if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid media_id." });
         try {
-            payload = parseJsonField<Partial<FacilityDTO>>(req);
-        } catch {
-            return res.status(400).json({ message: "Invalid request payload." });
-        }
-        try {
-            const updated = await MediaService.updateFacilityOrReviews(id, payload, req.file);
-            res.json(camelCaseKeysDeep(updated));
+            await MediaService.deleteMedia(id);
+            res.status(204).send();
         } catch (e: any) {
-            if (e?.message === "FACILITY_NOT_FOUND")
-                return res.status(404).json({ message: "Facility not found." });
-            res.status(500).json({ message: "Failed to update facility." });
+            if (e?.message === "MEDIA_NOT_FOUND")
+                return res.status(404).json({ message: "Media not found." });
+            res.status(500).json({ message: "Failed to delete media." });
         }
     }
-    async listReviews(req: Request, res: Response) {
-        try {
-            const facilities = await MediaService.listReviews();
-            res.json(camelCaseKeysDeep(facilities));
-        } catch (e) {
-            res.status(500).json({ message: "Failed to retrieve facilities." });
-        }
-    }
-
 }

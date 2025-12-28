@@ -9,43 +9,21 @@ const router = Router();
 const mediaController = new MediaController();
 
 router.post(
-    "/facilities",
+    "/",
     authRole([Role.ADMIN]),
     upload.single("file"),
-    mediaController.createFacility.bind(mediaController)
+    mediaController.createMedia.bind(mediaController)
 );
 router.put(
-    "/facilities/:id",
+    "/:id",
     authRole([Role.ADMIN]),
     upload.single("file"),
-    mediaController.updateFacility.bind(mediaController)
+    mediaController.updateMedia.bind(mediaController)
 );
-router.get("/facilities", mediaController.listFacilities.bind(mediaController));
+router.get("/", mediaController.listMedia.bind(mediaController));
 
-router.post(
-    "/reviews",
-    authRole([Role.ADMIN]),
-    upload.single("file"),
-    mediaController.createReviews.bind(mediaController)
-);
-router.put(
-    "/reviews/:id",
-    authRole([Role.ADMIN]),
-    upload.single("file"),
-    mediaController.updateReviews.bind(mediaController)
-);
-router.get("/reviews", mediaController.listReviews.bind(mediaController));
+router.get("/:id", mediaController.getMediaById.bind(mediaController));
 
-router.post(
-    "/videos",
-    authRole([Role.ADMIN]),
-    mediaController.createVideo.bind(mediaController)
-);
-router.put(
-    "/videos/:id",
-    authRole([Role.ADMIN]),
-    mediaController.updateVideo.bind(mediaController)
-);
-router.get("/videos", mediaController.listVideos.bind(mediaController));
+router.delete("/:id", authRole([Role.ADMIN]), mediaController.deleteMedia.bind(mediaController));
 
 export default router;

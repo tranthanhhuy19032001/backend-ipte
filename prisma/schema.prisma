@@ -334,13 +334,15 @@ model media {
   delete_image_url String?
   image_url        String?
   video_url        String?
-  is_disable       Boolean?  @default(false)
+  is_disabled      Boolean?  @default(false)
   media_type       String?   @db.VarChar(255)
   created_at       DateTime? @default(now()) @db.Timestamp(6)
   updated_at       DateTime? @default(now()) @db.Timestamp(6)
   created_by       String?   @db.VarChar(50)
   updated_by       String?   @db.VarChar(50)
   version          Int?      @default(1)
+  category_id      Int?
+  category_type    String?   @db.VarChar(255)
 }
 
 model consultation {

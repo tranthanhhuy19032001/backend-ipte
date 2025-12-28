@@ -38,7 +38,10 @@ export class SocialService {
 
     static async getById(id: number, categoryType = DEFAULT_SOCIAL_CATEGORY) {
         const found = await prisma.information.findUnique({ where: { information_id: id } });
-        if (!found || (found.category_type && found.category_type !== categoryType)) {
+        if (
+            !found ||
+            (found.category_type && !found.category_type?.includes(DEFAULT_SOCIAL_CATEGORY))
+        ) {
             throw new Error("SOCIAL_NOT_FOUND");
         }
         return mapToSocialDTO(found);
@@ -103,7 +106,10 @@ export class SocialService {
 
     static async remove(id: number, categoryType = DEFAULT_SOCIAL_CATEGORY) {
         const found = await prisma.information.findUnique({ where: { information_id: id } });
-        if (!found || (found.category_type && found.category_type !== categoryType)) {
+        if (
+            !found ||
+            (found.category_type && !found.category_type?.includes(DEFAULT_SOCIAL_CATEGORY))
+        ) {
             throw new Error("SOCIAL_NOT_FOUND");
         }
         await prisma.information.delete({ where: { information_id: id } });
