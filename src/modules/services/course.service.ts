@@ -17,6 +17,8 @@ export type CourseListQuery = {
     slug?: string;
     category?: string;
     categoryId?: number;
+    isFeatured?: boolean;
+    isDisabled?: boolean;
     sortBy?: "price" | "created_at" | "updated_at";
     orderBy?: "asc" | "desc";
     page?: number;
@@ -164,6 +166,8 @@ export class CourseService {
             slug,
             category,
             categoryId,
+            isFeatured,
+            isDisabled,
             sortBy: sort_by = "created_at",
             orderBy: sort_order = "asc",
             page = 1,
@@ -244,6 +248,8 @@ export class CourseService {
                       }
                     : {},
                 slug ? { slug: { equals: slug } } : {},
+                isFeatured !== undefined ? { is_featured: { equals: isFeatured } } : {},
+                isDisabled !== undefined ? { is_disabled: { equals: isDisabled } } : {},
             ],
         };
 

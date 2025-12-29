@@ -100,6 +100,8 @@ export class NewsDAO {
         isProminent?: number;
         categoryId?: number;
         categoryType?: string;
+        isFeatured?: boolean;
+        isDisabled?: boolean;
         page: number;
         pageSize: number;
     }): Promise<{
@@ -118,6 +120,8 @@ export class NewsDAO {
             isProminent,
             categoryId,
             categoryType,
+            isFeatured,
+            isDisabled,
             page,
             pageSize,
         } = filters;
@@ -168,6 +172,12 @@ export class NewsDAO {
             whereClause.category_id = {
                 in: categoryIds,
             };
+        }
+        if (isFeatured !== undefined) {
+            whereClause.is_featured = isFeatured;
+        }
+        if (isDisabled !== undefined) {
+            whereClause.is_disabled = isDisabled;
         }
         const [items, total] = await prisma.$transaction([
             prisma.news.findMany({
