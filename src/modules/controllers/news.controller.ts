@@ -23,7 +23,7 @@ export class NewsController {
     async getAllNews(req: Request, res: Response): Promise<void> {
         const page = Math.max(1, Number(req.query.page) || 1);
         const pageSize = Math.max(1, Math.min(Number(req.query.page_size) || 20, 100));
-        const { search, title, description, slug, status, isProminent, categoryId, categoryType } =
+        const { search, title, description, slug, status, isProminent, categoryId, categoryType, isFeatured, isDisabled } =
             req.query;
 
         try {
@@ -36,6 +36,8 @@ export class NewsController {
                 isProminent: isProminent ? Number(isProminent) : undefined,
                 categoryId: categoryId ? Number(categoryId) : undefined,
                 categoryType: categoryType as string | undefined,
+                isFeatured: isFeatured != null ? isFeatured === "true" : undefined,
+                isDisabled: isDisabled != null ? isDisabled === "true" : undefined,
                 page,
                 pageSize,
             });

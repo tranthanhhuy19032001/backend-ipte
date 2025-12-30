@@ -75,6 +75,8 @@ export class NewsService {
         isProminent?: number;
         categoryId?: number;
         categoryType?: string;
+        isFeatured?: boolean;
+        isDisabled?: boolean;
         page: number;
         pageSize: number;
     }): Promise<{
