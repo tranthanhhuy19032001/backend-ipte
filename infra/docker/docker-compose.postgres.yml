@@ -22,9 +22,16 @@ services:
         # Tăng bảo mật container
         security_opt:
             - no-new-privileges:true
+        networks:
+            - ipte-network
 volumes:
     postgres_data:
 
 secrets:
   postgres_password:
     file: ./secrets/postgres_password.txt
+
+networks:
+  ipte-network:
+    driver: bridge
+
