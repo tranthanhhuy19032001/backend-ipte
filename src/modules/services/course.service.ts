@@ -17,6 +17,7 @@ export type CourseListQuery = {
     slug?: string;
     category?: string;
     categoryId?: number;
+    categoryType?: string;
     isFeatured?: boolean;
     isDisabled?: boolean;
     sortBy?: "price" | "created_at" | "updated_at";
@@ -53,6 +54,7 @@ function normalizeCreateInput(input: SeoEvaluationInput) {
         ...(input.level && { level: input.level as any }),
         ...(input.category && { category: input.category as any }),
         ...(input.categoryId && { category_id: input.categoryId }),
+        ...(input.categoryType && { category_type: input.categoryType }),
         is_disabled: input.isDisabled ?? false,
         is_featured: input.isFeatured ?? false,
         ...(input.image && { image: input.image }),
@@ -82,6 +84,7 @@ function normalizeUpdateInput(input: CourseUpdateDTO) {
         ...(input.description && { description: input.description }),
         ...(input.level && { level: input.level as any }),
         ...(input.category && { category: input.category as any }),
+        ...(input.categoryType && { category_type: input.categoryType as any }),
         ...(input.categoryId && { category_id: input.categoryId }),
         ...(input.isDisabled !== undefined && { is_disabled: input.isDisabled }),
         ...(input.isFeatured !== undefined && { is_featured: input.isFeatured }),
@@ -128,7 +131,6 @@ export class CourseService {
         });
 
         try {
-            console.log("Creating course with data:", JSON.stringify(data, null, 2));
             const created = await prisma.course.create({ data });
             return created;
         } catch (e: any) {
@@ -166,6 +168,7 @@ export class CourseService {
             slug,
             category,
             categoryId,
+            categoryType,
             isFeatured,
             isDisabled,
             sortBy: sort_by = "created_at",
@@ -240,6 +243,11 @@ export class CourseService {
                           category: {
                               equals: category as $Enums.course_category,
                           },
+                      }
+                    : {},
+                categoryType
+                    ? {
+                          category_type: { equals: categoryType },
                       }
                     : {},
                 categoryId

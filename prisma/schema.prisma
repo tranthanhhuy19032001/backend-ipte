@@ -76,6 +76,7 @@ model course {
   benefits         String?
   seo_score        Int?
   delete_image_url String?
+  category_type    String?          @db.VarChar(255)
   comment          comment[]
 
   @@index([level], map: "idx_course_level")

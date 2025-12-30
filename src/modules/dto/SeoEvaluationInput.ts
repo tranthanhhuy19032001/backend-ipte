@@ -5,6 +5,7 @@ export interface SeoEvaluationInput {
     level: string | null;
     category: string | null;
     categoryId: number | null;
+    categoryType: string | null;
     description: string | null;
     isDisabled: boolean | null;
     isFeatured: boolean | null;

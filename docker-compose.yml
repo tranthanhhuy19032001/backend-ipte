@@ -9,3 +9,6 @@ services:
         restart: unless-stopped
         networks:
             - ipte-network
+networks:
+    ipte-network:
+        external: true

@@ -28,10 +28,9 @@ volumes:
     postgres_data:
 
 secrets:
-  postgres_password:
-    file: ./secrets/postgres_password.txt
+    postgres_password:
+        file: ./secrets/postgres_password.txt
 
 networks:
-  ipte-network:
-    driver: bridge
-
+    ipte-network:
+        external: true
