@@ -35,12 +35,12 @@ export class AboutController {
 
     async list(req: Request, res: Response) {
         try {
-            const { q, category, categoryType, page, page_size, about_id, aboutId } = req.query;
+            const { q, category, categoryType, page, pageSize, about_id, aboutId } = req.query;
             const result = await AboutService.list({
                 categoryType: (categoryType ?? category) as string | undefined,
                 q: q as string | undefined,
                 page: page ? Number(page) : undefined,
-                page_size: page_size ? Number(page_size) : undefined,
+                page_size: pageSize ? Number(pageSize) : undefined,
                 aboutId: aboutId ? Number(aboutId) : about_id ? Number(about_id) : undefined,
             });
             res.json(camelCaseKeysDeep(result));

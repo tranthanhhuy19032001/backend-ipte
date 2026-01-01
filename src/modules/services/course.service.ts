@@ -23,7 +23,7 @@ export type CourseListQuery = {
     sortBy?: "price" | "created_at" | "updated_at";
     orderBy?: "asc" | "desc";
     page?: number;
-    page_size?: number;
+    pageSize?: number;
 };
 
 /** T?o slug duy nh?t t? course_name ho?c slug truy?n v�o */
@@ -55,8 +55,8 @@ function normalizeCreateInput(input: SeoEvaluationInput) {
         ...(input.category && { category: input.category as any }),
         ...(input.categoryId && { category_id: input.categoryId }),
         ...(input.categoryType && { category_type: input.categoryType }),
-        is_disabled: input.isDisabled ?? false,
-        is_featured: input.isFeatured ?? false,
+        is_disabled: input.isDisabled ? input.isDisabled : false,
+        is_featured: input.isFeatured ? input.isFeatured : false,
         ...(input.image && { image: input.image }),
         ...(input.content && { content: input.content }),
         ...(input.duration && { duration: input.duration }),
@@ -173,8 +173,8 @@ export class CourseService {
             isDisabled,
             sortBy: sort_by = "created_at",
             orderBy: sort_order = "asc",
-            page = 1,
-            page_size = 20,
+            page,
+            pageSize,
         } = query;
 
         const where: Prisma.courseWhereInput = {
@@ -265,8 +265,8 @@ export class CourseService {
             [sort_by]: sort_order,
         } as Prisma.courseOrderByWithRelationInput;
 
-        const skip = (Math.max(1, page) - 1) * Math.max(1, page_size);
-        const take = Math.max(1, Math.min(page_size, 100));
+        const skip = (Math.max(1, page || 1) - 1) * Math.max(1, pageSize || 20);
+        const take = Math.max(1, Math.min(pageSize || 20, 100));
 
         const [items, total] = await Promise.all([
             prisma.course.findMany({ where, orderBy, skip, take }),
@@ -275,8 +275,8 @@ export class CourseService {
 
         return {
             items,
-            page: Math.max(1, page),
-            page_size: take,
+            page: Math.max(1, page || 1),
+            pageSize: take,
             total,
             total_pages: Math.ceil(total / take),
         };

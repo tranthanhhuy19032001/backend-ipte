@@ -152,8 +152,7 @@ export class NewsService {
         data: Partial<SeoEvaluationInput>,
         file?: Express.Multer.File
     ): Promise<news> {
-
-        const entity =  await this.newsDAO.findById(id);
+        const entity = await this.newsDAO.findById(id);
         if (!entity) {
             throw new Error("NEWS_NOT_FOUND");
         }
@@ -206,7 +205,7 @@ export class NewsService {
     }
 
     async deleteNews(id: number): Promise<news> {
-        const entity =  await this.newsDAO.findById(id);
+        const entity = await this.newsDAO.findById(id);
         if (!entity) {
             throw new Error("NEWS_NOT_FOUND");
         }
@@ -244,6 +243,9 @@ function normalizeCreateInput(input: SeoEvaluationInput) {
         ...(input.level && { level: input.level as any }),
         ...(input.category && { category: input.category as any }),
         ...(input.categoryId && { category_id: input.categoryId }),
+        ...(input.categoryType && { category_type: input.categoryType }),
+        ...(input.isDisabled !== undefined && { is_disabled: input.isDisabled }),
+        ...(input.isFeatured !== undefined && { is_featured: input.isFeatured }),
         ...(input.image && { image: input.image }),
         ...(input.deleteImageUrl && { delete_image_url: input.deleteImageUrl }),
         ...(input.content && { content: input.content }),
@@ -282,6 +284,7 @@ function normalizeUpdateInput(input: Partial<SeoEvaluationInput>) {
         ...(input.level && { level: input.level as any }),
         ...(input.category && { category: input.category as any }),
         ...(input.categoryId && { category_id: input.categoryId }),
+        ...(input.categoryType && { category_type: input.categoryType }),
         ...(input.image && { image: input.image }),
         ...(input.content && { content: input.content }),
         ...(input.duration && { duration: input.duration }),

@@ -22,7 +22,7 @@ export class StudentController {
     async getStudents(req: Request, res: Response): Promise<void> {
         try {
             const page = req.query.page ? Number(req.query.page) : 1;
-            const pageSize = req.query.page_size ? Number(req.query.page_size) : 20;
+            const pageSize = req.query.pageSize ? Number(req.query.pageSize) : 20;
             const { fullName, slug, phone, courseId } = req.query;
 
             const students = await studentService.getStudents({

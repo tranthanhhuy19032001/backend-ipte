@@ -10,7 +10,7 @@ const bannerService = new BannerService();
 export class BannerController {
     async getBanners(req: Request, res: Response): Promise<void> {
         const page = Math.max(1, Number(req.query.page) || 1);
-        const pageSize = Math.max(1, Math.min(Number(req.query.page_size) || 20, 100));
+        const pageSize = Math.max(1, Math.min(Number(req.query.pageSize) || 20, 100));
         const { search, placement, isActive, startAt, endAt, categoryId } = req.query;
 
         try {

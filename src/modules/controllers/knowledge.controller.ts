@@ -28,7 +28,7 @@ export class KnowledgeController {
     async getKnowledges(req: any, res: any) {
         try {
             const page = Math.max(1, Number(req.query.page) || 1);
-            const pageSize = Math.max(1, Math.min(Number(req.query.page_size) || 20, 100));
+            const pageSize = Math.max(1, Math.min(Number(req.query.pageSize) || 20, 100));
             const { title, slug, description, status, isProminent, categoryId, categoryType } =
                 req.query;
 

@@ -41,7 +41,7 @@ export class MediaController {
     async listMedia(req: Request, res: Response) {
         try {
             const page = Math.max(1, Number(req.query.page) || 1);
-            const pageSize = Math.max(1, Math.min(Number(req.query.page_size) || 15, 100));
+            const pageSize = Math.max(1, Math.min(Number(req.query.pageSize) || 15, 100));
             const { categoryId, categoryType, mediaType, isDisabled, search } = req.query;
             const medias = await MediaService.listMedia({
                 categoryId: categoryId ? Number(categoryId) : undefined,

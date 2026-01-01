@@ -31,13 +31,13 @@ export class ConsultationController {
 
     async list(req: Request, res: Response) {
         try {
-            const { q, status, courseId, page, page_size } = req.query;
+            const { q, status, courseId, page, pageSize } = req.query;
             const result = await consultationService.list({
                 q: q as string | undefined,
                 status: status as string | undefined,
                 courseId: courseId ? Number(courseId) : undefined,
                 page: page ? Number(page) : undefined,
-                page_size: page_size ? Number(page_size) : undefined,
+                page_size: pageSize ? Number(pageSize) : undefined,
             });
             res.json(camelCaseKeysDeep(result));
         } catch {

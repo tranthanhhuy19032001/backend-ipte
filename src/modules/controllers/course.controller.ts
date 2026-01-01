@@ -41,6 +41,8 @@ export class CourseController {
 
     async list(req: Request, res: Response) {
         try {
+            const page = Math.max(1, Number(req.query.page) || 1);
+            const pageSize = Math.max(1, Math.min(Number(req.query.pageSize) || 20, 100));
             const {
                 search: q,
                 courseName,
@@ -56,8 +58,6 @@ export class CourseController {
                 isDisabled,
                 orderBy,
                 sortBy,
-                page,
-                pageSize,
             } = req.query;
 
             const result = await CourseService.listCourses({
@@ -75,8 +75,8 @@ export class CourseController {
                 isDisabled: isDisabled != null ? isDisabled === "true" : undefined,
                 orderBy: orderBy as "asc" | "desc" | undefined,
                 sortBy: sortBy as "price" | "created_at" | "updated_at" | undefined,
-                page: page != null ? Number(page) : undefined,
-                page_size: pageSize != null ? Number(pageSize) : undefined,
+                page,
+                pageSize,
             });
 
             res.json(camelCaseKeysDeep(result));

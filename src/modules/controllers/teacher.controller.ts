@@ -33,7 +33,7 @@ export class TeacherController {
     async getTeachers(req: Request, res: Response): Promise<void> {
         try {
             const page = Math.max(1, Number(req.query.page) || 1);
-            const pageSize = Math.max(1, Math.min(Number(req.query.page_size) || 20, 100));
+            const pageSize = Math.max(1, Math.min(Number(req.query.pageSize) || 20, 100));
             const {
                 name,
                 slug,

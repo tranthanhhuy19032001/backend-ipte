@@ -35,12 +35,12 @@ export class SocialController {
 
     async list(req: Request, res: Response) {
         try {
-            const { q, category, categoryType, page, page_size } = req.query;
+            const { q, category, categoryType, page, pageSize } = req.query;
             const result = await SocialService.list({
                 categoryType: (categoryType ?? category) as string | undefined,
                 q: q as string | undefined,
                 page: page ? Number(page) : undefined,
-                page_size: page_size ? Number(page_size) : undefined,
+                page_size: pageSize ? Number(pageSize) : undefined,
             });
             res.json(camelCaseKeysDeep(result));
         } catch (e) {
